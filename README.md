@@ -2,4 +2,3 @@ Metamorphia is a metamorphic shellcode obfuscator that is designed to evade sign
 
 Known Bugs: 
 - Register Swap does not check if a jmp is within the main subroutine or not, it may not work within encapsulated jumps.
-- Dead code insertion and Logic replacement's register-dependent instructions may not check for subroutines or register-dependent instructions.
