@@ -7,6 +7,8 @@ mathInstructions = ["xor", "add", "sub", "mov"]
 
 jumpInstructions = ["jmp", "jo", "jno", "js", "jns", "je", "jz", "jne", "jnz", "jb", "jnae", "jc", "jnb", "jae", "jnc", "jbe", "jna", "ja", "jnbe", "jl", "jnge", "jge", "jnl", "jle", "jng", "jg", "jnle", "jp", "jpe", "jnp", "jpo", "jcxz", "jecxz", "call", "loop", "loope", "loopne", "loopnz", "loopz"]#Add other instructions and move to main
 
+critical_instrs = ["jmp", "jo", "jno", "js", "jns", "je", "jz", "jne", "jnz", "jb", "jnae", "jc", "jnb", "jae", "jnc", "jbe", "jna", "ja", "jnbe", "jl", "jnge", "jge", "jnl", "jle", "jng", "jg", "jnle", "jp", "jpe", "jnp", "jpo", "jcxz", "jecxz", "call", "loop", "loope", "loopne", "loopnz", "loopz", "int", "syscall", "call", "pusha", "popa", "cdq", "cwd", "div", "idiv", "lods", "lodsd", "lodsb", "ret", "retn", "retq"]#Add other instructions and move to main
+
 badChars = ["00","04","05","09","0A","0a","20"]
 
 floating_point = ["fldpi", "fldl2e"]

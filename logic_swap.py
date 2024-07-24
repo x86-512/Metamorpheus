@@ -153,11 +153,12 @@ def logic_replacement(self, instructions:list) -> list:
                     max_reg:int = i+1
                     for k, after_instr in enumerate(instructions[i+1:], start=i+1): #Also check if it is register dependent
                         if after_instr.split(" ")[1:] is not None:
-                            for l in after_instr.split(" "):
+                            for l in after_instr.split(" "): #Good thing this isn't []ed
                                 for sub in registerClassMain(register):
-                                    if(l.find(sub)>-1): #CHECK THE ENTIRE FUCKING REGISTER CLASS
-                                        max_reg = k-1
-                                        break
+                                    for jmp in critical_instrs:
+                                        if(sub in l or jmp in l): #CHECK THE ENTIRE REGISTER CLASS
+                                            max_reg = k-1
+                                            break
                     insert_index = random.randint(i+1, max_reg)
                     self.insertWithCare(instructions, f"{target_mnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
                 elif random_adds<random_add_limit:
