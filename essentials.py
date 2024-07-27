@@ -1096,6 +1096,7 @@ class Shellcode:
                 returnable += bytes.fromhex(format(byte,"02x"))
         return returnable
 
+#NO I AM NOT IMPORTING RE
 def findall(string:str, phrase:str) -> list:
     returnable = []
     findIndex = 0
