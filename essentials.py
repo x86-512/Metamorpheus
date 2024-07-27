@@ -7,7 +7,7 @@ mathInstructions = ["xor", "add", "sub", "mov"]
 
 jumpInstructions = ["jmp", "jo", "jno", "js", "jns", "je", "jz", "jne", "jnz", "jb", "jnae", "jc", "jnb", "jae", "jnc", "jbe", "jna", "ja", "jnbe", "jl", "jnge", "jge", "jnl", "jle", "jng", "jg", "jnle", "jp", "jpe", "jnp", "jpo", "jcxz", "jecxz", "call", "loop", "loope", "loopne", "loopnz", "loopz"]#Add other instructions and move to main
 
-critical_instrs = ["jmp", "jo", "jno", "js", "jns", "je", "jz", "jne", "jnz", "jb", "jnae", "jc", "jnb", "jae", "jnc", "jbe", "jna", "ja", "jnbe", "jl", "jnge", "jge", "jnl", "jle", "jng", "jg", "jnle", "jp", "jpe", "jnp", "jpo", "jcxz", "jecxz", "call", "loop", "loope", "loopne", "loopnz", "loopz", "int", "syscall", "call", "pusha", "popa", "cdq", "cwd", "div", "idiv", "lods", "lodsd", "lodsb", "ret", "retn", "retq"]#Add other instructions and move to main
+critical_instrs = ["jmp", "jo", "jno", "js", "jns", "je", "jz", "jne", "jnz", "jb", "jnae", "jc", "jnb", "jae", "jnc", "jbe", "jna", "ja", "jnbe", "jl", "jnge", "jge", "jnl", "jle", "jng", "jg", "jnle", "jp", "jpe", "jnp", "jpo", "jcxz", "jecxz", "call", "loop", "loope", "loopne", "loopnz", "loopz", "int", "syscall", "call", "pusha", "popa", "cdq", "cwd", "div", "idiv", "lods", "lodsd", "lodsb", "ret", "retn", "retq"]#Basically register dependednt instructions or stuff that alters the control flow
 
 badChars = ["00","04","05","09","0A","0a","20"]
 
@@ -499,13 +499,17 @@ class Shellcode:
 
     @property
     def assembled_instrs(self):
-        if self.is64:
+        if self.is_64:
             return Shellcode.assemble64(self.shellcode)
         return Shellcode.assemble(self.shellcode)
 
     @property
     def length(self):
         return len(self.shellcode)
+
+    @property
+    def string(self):
+        return bytesToString(self.shellcode)
 
     def update_bounds_of_reg_swap(self, instructions:list[str], before:int,after:int = None) -> list[int]:
         #Check if before is in a jump
@@ -1096,7 +1100,6 @@ class Shellcode:
                 returnable += bytes.fromhex(format(byte,"02x"))
         return returnable
 
-#NO I AM NOT IMPORTING RE
 def findall(string:str, phrase:str) -> list:
     returnable = []
     findIndex = 0

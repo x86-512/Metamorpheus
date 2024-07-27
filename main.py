@@ -1,9 +1,12 @@
-from register_swap import *
-from essentials import *
-from dead_code import *
-from logic_swap import *
-from garbage_jump import *
+from modules.register_swap import *
+from modules.dead_code import *
+from modules.logic_swap import *
+from modules.garbage_jump import *
+from essentials import * #All the modules import from the main file's directory automatically, so there is no need to place this in modules
 #from encryption import * # Work in progress
+
+import compilers.win as wincomp
+import compilers.unix as unicomp
 
 import sys
 
@@ -110,10 +113,18 @@ def main() -> None:
                 code.shellcode = Shellcode.assemble64(updatedInstr)
             else:
                 code.shellcode = Shellcode.assemble(updatedInstr)
+
+        if len(sys.argv)>=3:
+            if 'w' in sys.argv[2]:
+                print("Windows functionality will be added soon")
+                pass
+            if 'u' in sys.argv[2]:
+                unicomp.compile(64 if code.is_64 else 32,code.string)
+
         #updatedInstr = code.encrypt(updatedInstr)
         print(f"\nUpdated Instructions:\n{updatedInstr}\n")
-        print(f"Shellcode:\n{bytesToString(code.shellcode)}")
-        print(f"\nShellcode Length: {len((code.shellcode))} bytes")
+        print(f"Shellcode:\n{code.string}")
+        print(f"\nShellcode Length: {code.length} bytes")
     else:
         print_help()
 
