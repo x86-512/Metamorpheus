@@ -2,6 +2,7 @@ from register_swap import *
 from essentials import *
 from dead_code import *
 from logic_swap import *
+from garbage_jump import *
 #from encryption import * # Work in progress
 
 import sys
@@ -11,6 +12,7 @@ def print_help():
     print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
+    print("-g: Garbage byte insertion")
 
 
 def findBetweenEach(string:str, phrase:str) -> list:
@@ -46,7 +48,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode:
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 's', 'x']
+    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
@@ -57,6 +59,12 @@ def main() -> None:
         sys.argv[1]
     except IndexError:
         args_present = False
+
+    code:Shellcode = loadShellcodeFromFile("shellcode.txt")
+    if code.is_64_bit():
+        instructions = Shellcode.disassemble64(code.getCode())
+    else:
+        instructions = Shellcode.disassemble(code.getCode())
 
     if args_present:
         if(not verify_args()):
@@ -74,10 +82,10 @@ def main() -> None:
         print(f"\nOriginal Instructions: {instructions}")
         jumpIndexesOffset = code.findJump(instructions) 
         code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
-        print(instructions)
         code.findJumpTargetsRelative(instructions)
 
         updatedInstr = instructions
+
         if sys.argv[1].find("d")>-1:
             updatedInstr = code.addDeadCode(instructions)
         #print(updatedInstr)
@@ -94,13 +102,18 @@ def main() -> None:
 
         if (sys.argv[1].find("x"))>-1:
             updatedInstr = code.registerSwap(updatedInstr)
+
+        if 'g' in sys.argv[1]:
+            code.insert_garbage(updatedInstr)
+        else:
+            if code.is_64_bit():
+                code.shellcode = Shellcode.assemble64(updatedInstr)
+            else:
+                code.shellcode = Shellcode.assemble(updatedInstr)
         #updatedInstr = code.encrypt(updatedInstr)
         print(f"\nUpdated Instructions:\n{updatedInstr}\n")
-        if code.is_64_bit():
-            print(f"Shellcode:\n{bytesToString(Shellcode.assemble64(updatedInstr))}")
-        else:
-            print(f"Shellcode:\n{bytesToString(Shellcode.assemble(updatedInstr))}")
-        print(f"\nShellcode Length: {len(Shellcode.assemble(updatedInstr))} bytes")
+        print(f"Shellcode:\n{bytesToString(code.shellcode)}")
+        print(f"\nShellcode Length: {len((code.shellcode))} bytes")
     else:
         print_help()
 
