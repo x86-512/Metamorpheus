@@ -39,15 +39,10 @@ def insert_garbage(self, instructions) -> int:
     else:
         self.shellcode = Shellcode.assemble(instructions)
         shellcode_byte_locations.append(self.shellcode.find(Shellcode.assemble(instructions[jump_target:])))
-    #for i in shellcode_byte_locations:
-    #breakpoint()
+
     for i in shellcode_byte_locations:
         self.shellcode = self.shellcode[0:i]+garb_bytes+self.shellcode[i:]
 
-    print(f"Jump Indexes After: {self.jumpIndexes}")
-    for i in self.jumpIndexes:
-        print(i)
-        print(instructions[i])
     return num_bytes
 
 Shellcode.insert_garbage = insert_garbage

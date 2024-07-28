@@ -42,9 +42,9 @@ def xor_replacement_suggestion(instruction:str) -> list:
     returnable:list = [updated_instruction,xor_pair[1]] 
     return returnable
 
-@debughook_verbose
+#@debughook_verbose
 def add_replacement_suggestion(instruction:str) -> list:
-    print("ADD REPLACEMENT CALL")
+    #print("ADD REPLACEMENT CALL")
     mnemonic = instruction.split(" ")[0]
     target_mnemonic = mnemonic
     if mnemonic=="mov" or mnemonic=="xor":
