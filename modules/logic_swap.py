@@ -28,6 +28,7 @@ def xor_replacement(instructions:list) -> list: #I may rewrite to have instructi
         instructions[markedTargets[i]] = instructions[markedTargets[i]].replace(number, xor_set[0])
         instructions.append(f"xor {register}, {xor_set[1]}") #REPLACE WHEN NECESSARY
 
+#@debughook_verbose
 def xor_replacement_suggestion(instruction:str) -> list:
     target_num = instruction.split(", ")[1]
     #Unbeautify target_num and check its size, if it is 8 or less, treat it as 32-bit
@@ -65,7 +66,7 @@ def add_replacement_suggestion(instruction:str) -> list:
 
 
 #IF IT IS ADDED AND THE PREVIOUS INSTRUCTION IS SUB, THEN IT IS subbed
-@debughook_verbose
+#@debughook_verbose
 def sub_replacement_suggestion(instruction:str) -> list:
     mnemonic = instruction.split(" ")[0]
     target_mnemonic = mnemonic
@@ -152,18 +153,20 @@ def logic_replacement(self, instructions:list) -> list:
                     if replacement_suggestions[1]=="0x00000000":
                         continue
                     instructions[i] = replacement_suggestions[0]
-                    register = instruction.split(" ")[1].split(",")[0]
+                    register = unsplit_string(instruction.split(",")[0].split(" ")[1:], " ") #But what is there's a dereference?
                     max_reg:int = i+1
                     for k, after_instr in enumerate(instructions[i+1:], start=i+1): #Also check if it is register dependent
                         if after_instr.split(" ")[1:] is not None:
                             for l in after_instr.split(" "):
                                 for sub in registerClassMain(register):
-                                    for jmp in critical_instrs:
-                                        if(sub in l or jmp in l): #CHECK THE ENTIRE REGISTER CLASS
-                                            max_reg = k-1
-                                            break
+                                    for crit in critical_instrs:
+                                        for target in self.jumpTargets:
+                                            if(sub in l or after_instr.split(" ")[0]==crit or k==target): #CHECK THE ENTIRE REGISTER CLASS, ALSO CHECK REG-Dependent instryctuib
+                                                #CHECK IT TO MAKE SURE IT IS BEFORE A JUMP_TARGET
+                                                max_reg = k-1
+                                                break
                     insert_index = random.randint(i+1, max_reg)
-                    print(f"Target_mnemonic: {targetMnemonic}")
+                    #print(f"Target_mnemonic: {targetMnemonic}")
                     self.insertWithCare(instructions, f"{targetMnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
                 elif random_adds<random_add_limit:
                     rand_max = random.randint(3,5)
@@ -203,17 +206,18 @@ def logic_replacement(self, instructions:list) -> list:
                         if replacement_suggestions[1]=="0x00000000":
                             continue
                         instructions[i] = replacement_suggestions[0]
-                        register = instruction.split(" ")[1].split(",")[0]
+                        register = unsplit_string(instruction.split(",")[0].split(" ")[1:], " ") #But what is there's a dereference?
                         max_reg:int = i+1
                         for k, after_instr in enumerate(instructions[i+1:], start=i+1): #Also check if it is register dependent
                             if after_instr.split(" ")[1:] is not None:
                                 for l in after_instr.split(" "):
                                     for sub in registerClassMain(register):
                                         for crit in critical_instrs:
-                                            print("\n\n\n\n\n\n\nCRIT: "+str(after_instr.split(" ")[0]==crit)+""+str(after_instr.split(" ")[0])+ str(crit) +"\n\n\n\n\n\n\n\n")
-                                            if(sub in l or after_instr.split(" ")[0]==crit): #CHECK THE ENTIRE REGISTER CLASS, ALSO CHECK REG-Dependent instryctuib
-                                                max_reg = k-1
-                                                break
+                                            for target in self.jumpTargets:
+                                                if(sub in l or after_instr.split(" ")[0]==crit or k==target): #CHECK THE ENTIRE REGISTER CLASS, ALSO CHECK REG-Dependent instryctuib
+                                                    #CHECK IT TO MAKE SURE IT IS BEFORE A JUMP_TARGET
+                                                    max_reg = k-1
+                                                    break
                         try:
                             insert_index = random.randint(i+1, max_reg)
                         except ValueError:
