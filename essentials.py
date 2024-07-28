@@ -1048,7 +1048,7 @@ class Shellcode:
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-int(len(Shellcode.assemble([toAdd])))
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
-            elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<=index<jump
+            elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i] and not include_if_eq:#if target<=index<jump
                 self.jumpIndexes[i]+=1
                 if not shift_target:
                     self.jumpTargets[i]+=1
@@ -1062,6 +1062,21 @@ class Shellcode:
                 #    self.jumpAddition[i].append(len(Shellcode.assemble([toAdd])))
                 #    if include_if_eq:
                 #        instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
+            elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i] and include_if_eq:#if target<=index<jump
+                self.jumpIndexes[i]+=1
+                if not shift_target:
+                    self.jumpTargets[i]+=1
+                addedTypes.append("Between Backwards")
+                #This will insert before the target
+                if self.is_64:
+                    self.jumpAddition[i].append(len(Shellcode.assemble64([toAdd])))
+                    if include_if_eq:
+                        instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble64(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
+                else:
+                    self.jumpAddition[i].append(len(Shellcode.assemble([toAdd])))
+                    if include_if_eq:
+                        instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
+
 
             elif index<=self.jumpTargets[i] and index<=self.jumpIndexes[i]:
                 addedTypes.append("Below Both")
