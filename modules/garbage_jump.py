@@ -20,19 +20,28 @@ def generate_random_bytes(num_bytes:int) -> bytes:
 
 #@adding_bad_bytes
 def insert_garbage(self, instructions) -> int:
-    print(f"Jump Indexes Before: {self.jumpIndexes}")
+    #print(f"Jump Indexes Before: {self.jumpIndexes}")
     shellcode_byte_locations = []
     jump_target:int = randint(1,int((len(instructions)-1)))
     jump_index:int = jump_target - 1
-    num_bytes:int = randint(2,16)
-    self.insertWithCare(instructions, "nop", jump_target, False)
+    num_bytes:int = randint(2,26)
+    #self.insertWithCare(instructions, "nop", jump_target, False)#If it fails, re-enable this
+    jump_target = 19
+    jump_index = 18
     self.add_jump(instructions, jump_index, jump_target) #Get the index by assemble to the end
-
+    #print(jump_target)
+    #print(instructions[jump_index])
     garb_bytes:bytes = generate_random_bytes(num_bytes)
 
-    self.insert_bytes(instructions, len(garb_bytes), jump_target, False)
+    #print(instructions[jump_target-1])
+    self.insert_bytes(instructions, len(garb_bytes), jump_target-1, False)
+    #print(instructions[jump_target-1])
+    #print(f"Jump Index: {jump_index}")
+    #print(garb_bytes)
+    #print(len(garb_bytes))
+    self.set_jump(instructions, jump_index, len(garb_bytes))
 
-    self.dec_jump(instructions, jump_index)
+    #self.dec_jump(instructions, jump_index)
     if self.is_64:
         self.shellcode = Shellcode.assemble64(instructions)
         shellcode_byte_locations.append(self.shellcode.find(Shellcode.assemble64(instructions[jump_target:])))
@@ -41,8 +50,12 @@ def insert_garbage(self, instructions) -> int:
         shellcode_byte_locations.append(self.shellcode.find(Shellcode.assemble(instructions[jump_target:])))
 
     for i in shellcode_byte_locations:
-        self.shellcode = self.shellcode[0:i]+garb_bytes+self.shellcode[i:]
-
+        #self.shellcode = self.shellcode[0:i]+garb_bytes+self.shellcode[i:]
+        self.shellcode = self.shellcode[0:i]+(garb_bytes)+self.shellcode[i:]
+    #print(f"Jump Target: {jump_target}")
+    #print(f"Jump Target: {instructions[jump_target]}")
+    #for target in self.jumpTargets:
+    #    print(instructions[target])
     return num_bytes
 
 Shellcode.insert_garbage = insert_garbage

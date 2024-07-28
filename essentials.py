@@ -622,13 +622,17 @@ class Shellcode:
             rest_of_instrs+=len(Shellcode.assemble(instructions))
         return False if jump_number>rest_of_instrs else True
 
-    def dec_jump(self, instructions, index):
-        instructions[index] = instructions[index].split(" ")[0] + " " + hex(int(instructions[index].split(" ")[1], 16)-1)
+   # def dec_jump(self, instructions, index):
+   #     instructions[index] = instructions[index].split(" ")[0] + " " + hex(int(instructions[index].split(" ")[1], 16)-1)
+
+    def set_jump(self, instructions, index, new_val) -> None:
+        instructions[index] = instructions[index].split(" ")[0] + " " + hex(new_val+2) #Keystone is stupid when it comes to this stuff, so I have to add the lenfth of the jump
     
     #@debughook_verbose
     #Keystone is subtracting 2 from the jump when assembling
     def add_jump(self, instructions, new_index, new_target_ind): #Eventually, when stated, it will append the target if it matches the new index
-
+        #print(new_target_ind)
+        #print(instructions[new_target_ind])
         #go through jump indexes, if it is more that a certain index, insert before just to keep it in order
         #Then insert a new jump instruction accounting for everything between 
         #If forward start with i+1 to target
@@ -783,7 +787,7 @@ class Shellcode:
                     shouldReturn = True
                     for i in range(len(instructions)-offset):
                         if instructions[i+offset]!=postLanding[i]:
-                                houldReturn = False
+                                shouldReturn = False #Watch for typo
                     if shouldReturn==False:
                         if instructionsCopy[toAdd:].index(landingInstruction)==0:
                             break
@@ -933,38 +937,29 @@ class Shellcode:
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[i]].split(" ")[1],16)+added_bytes))
                     if not shift_target:
                         pass
-            elif index==self.jumpIndexes[i] and index<self.jumpTargets[i]:#If jumpIndexes<index<jumpTargets, if inserting between
-                if not shift_target:
-                    pass
             elif index>self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<index<=jump
+                #Logic error here, it is not subing corectly
+                #print(f"\n\n\n\nLOGTIC ERROR: {instructions[self.jumpIndexes[i]]}\n\n\n\n")
+                #print()
                 if self.is_64:
                     self.jumpAddition[i].append(added_bytes)
                     shellcode = Shellcode.assemble64(instructions)
-                    machineCodeJump = shellcode.index(Shellcode.assemble64([instructions[self.jumpIndexes[i]]]))
+                    machineCodeJump = shellcode.index(Shellcode.assemble64(instructions[self.jumpIndexes[i]:]))
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-added_bytes
-                    instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble64(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
+                    instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble64(instructions[self.jumpTargets[i]:self.jumpIndexes[i]]))-added_bytes)
                     addedTypes.append("Between Backwards")
                 else:
-                    print(self.jumpIndexes[i])
+                   # print(self.jumpIndexes[i])
+                    #print(instructions[self.jumpIndexes[i]])
                     self.jumpAddition[i].append(added_bytes)
                     shellcode = Shellcode.assemble(instructions)
-                    machineCodeJump = shellcode.index(Shellcode.assemble([instructions[self.jumpIndexes[i]]]))
+                    machineCodeJump = shellcode.index(Shellcode.assemble(instructions[self.jumpIndexes[i]:]))
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-added_bytes
-                    instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
+                    instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]]))-added_bytes)
                     addedTypes.append("Between Backwards")
             elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<=index<jump
                 if not shift_target:
                     pass
-                addedTypes.append("Between Backwards")
-                if self.is_64:
-                    self.jumpAddition[i].append(added_bytes)
-                    if include_if_eq:
-                        instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble64(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
-                else:
-                    self.jumpAddition[i].append(added_bytes)
-                    if include_if_eq:
-                        instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
-
             elif index<=self.jumpTargets[i] and index<=self.jumpIndexes[i]:
                 addedTypes.append("Below Both")
 
@@ -1118,7 +1113,7 @@ class Shellcode:
             try:
                 instructions.append(i.mnemonic+" " + i.op_str)
             except:
-                print("\x1b[31m\nError assembling instruction:") #lodsb is breaking it
+                print("\x1b[31m\nError disassembling instruction:") #lodsb is breaking it
                 print(instruction)
                 exit()
         return instructions
@@ -1133,6 +1128,7 @@ class Shellcode:
             except:
                 print("\x1b[31m\nError assembling instruction:") #lodsb is breaking it
                 print(instruction)
+                breakpoint()
                 exit()
             for byte in machineCode:
                 returnable += bytes.fromhex(format(byte,"02x"))
