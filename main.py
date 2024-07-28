@@ -86,7 +86,8 @@ def main() -> None:
         jumpIndexesOffset = code.findJump(instructions) 
         code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
         code.findJumpTargetsRelative(instructions)
-
+        print(code.jumpTargets)
+        breakpoint()
         updatedInstr = instructions
 
         if sys.argv[1].find("d")>-1:

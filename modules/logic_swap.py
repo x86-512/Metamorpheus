@@ -42,7 +42,9 @@ def xor_replacement_suggestion(instruction:str) -> list:
     returnable:list = [updated_instruction,xor_pair[1]] 
     return returnable
 
+@debughook_verbose
 def add_replacement_suggestion(instruction:str) -> list:
+    print("ADD REPLACEMENT CALL")
     mnemonic = instruction.split(" ")[0]
     target_mnemonic = mnemonic
     if mnemonic=="mov" or mnemonic=="xor":
@@ -63,6 +65,7 @@ def add_replacement_suggestion(instruction:str) -> list:
 
 
 #IF IT IS ADDED AND THE PREVIOUS INSTRUCTION IS SUB, THEN IT IS subbed
+@debughook_verbose
 def sub_replacement_suggestion(instruction:str) -> list:
     mnemonic = instruction.split(" ")[0]
     target_mnemonic = mnemonic
@@ -160,7 +163,8 @@ def logic_replacement(self, instructions:list) -> list:
                                             max_reg = k-1
                                             break
                     insert_index = random.randint(i+1, max_reg)
-                    self.insertWithCare(instructions, f"{target_mnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
+                    print(f"Target_mnemonic: {targetMnemonic}")
+                    self.insertWithCare(instructions, f"{targetMnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
                 elif random_adds<random_add_limit:
                     rand_max = random.randint(3,5)
                     change_to_change = random.randint(0,rand_max+4)
@@ -205,9 +209,11 @@ def logic_replacement(self, instructions:list) -> list:
                             if after_instr.split(" ")[1:] is not None:
                                 for l in after_instr.split(" "):
                                     for sub in registerClassMain(register):
-                                        if(l.find(sub)>-1): #CHECK THE ENTIRE REGISTER CLASS
-                                            max_reg = k-1
-                                            break
+                                        for crit in critical_instrs:
+                                            print("\n\n\n\n\n\n\nCRIT: "+str(after_instr.split(" ")[0]==crit)+""+str(after_instr.split(" ")[0])+ str(crit) +"\n\n\n\n\n\n\n\n")
+                                            if(sub in l or after_instr.split(" ")[0]==crit): #CHECK THE ENTIRE REGISTER CLASS, ALSO CHECK REG-Dependent instryctuib
+                                                max_reg = k-1
+                                                break
                         try:
                             insert_index = random.randint(i+1, max_reg)
                         except ValueError:

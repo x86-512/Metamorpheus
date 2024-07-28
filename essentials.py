@@ -145,12 +145,14 @@ def find_first_register_uses(instructions:list[str], registers:list[str], startI
 
 #Put the new instruction after the jump or target if it is register dependent, make the end index within the same subroutine
 #update to be in same subroutine
+@debughook_verbose
 def get_register_size(instruction:str) -> int:
     try:
         if not instruction.split(" ")[1]:
             return 0
-        if not instruction.split(" ")[1][0]:
-            return 0
+        for i in range(len(instruction.split(" "))):
+            if not instruction.split(" ")[1][i]:
+                return 0
     except IndexError:
         return 0
     if instruction.split(" ")[1][0]=='r':
@@ -215,11 +217,13 @@ def unbeautify_hex(hex_original:str) -> str: #
         print("Index Error from unbeautify_hex")
         return "0x"+hex_original[exclusivity_index:]
 
+@debughook_verbose
 def random_hex(arch:int) -> str:
     if arch%4==0:
         length_of_hex = int(arch/4)
         string = "0x"
         while(string == "0x"):
+            print("RANDOM_HEX")
             for i in range(length_of_hex):
                 string += (random.choice("0123456789abcdef"))
             if not contains_bad_chars(string):
@@ -227,17 +231,18 @@ def random_hex(arch:int) -> str:
             string = "0x"
     return "0xdeadbeef"
 
-def random_hex_xor_pair(original:str) -> list: #reverse it too
-    product = ""
-    verified_no_xor:bool = False
-    while not(verified_no_xor): #verify the product has no badchars:
-        hex1 = beautify_hex(random_hex((len(original)-2)*4))
-        #print(hex1)
-        product = hex(int(original[2:], 16)^int(hex1[2:], 16))
-        if not contains_bad_chars(product):
-            return [hex1, product]
-    return [original, "0x00000000"]
+#def random_hex_xor_pair(original:str) -> list: #reverse it too
+#    product = ""
+#    verified_no_xor:bool = False
+#    while not(verified_no_xor): #verify the product has no badchars:
+#        hex1 = beautify_hex(random_hex((len(original)-2)*4))
+#        #print(hex1)
+#        product = hex(int(original[2:], 16)^int(hex1[2:], 16))
+#        if not contains_bad_chars(product):
+#            return [hex1, product]
+#    return [original, "0x00000000"]
 
+@debughook_verbose
 def random_hex_xor_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
@@ -249,23 +254,34 @@ def random_hex_xor_pair(original:str, arch:int) -> list: #reverse it too
             return [hex1, product]
     return [original, "0x00000000"]
 
+@debughook_verbose
 def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
     original = beautify_hex(original, arch) #Have an exception handler in here
     while not(verified_no_xor): #verify the product has no badchars:
+        print("WHILE CALL")
         #verify that if added with the original, it will not go above int("0x"+"f"*arch/4, 16)
         hex1 = beautify_hex(random_hex(arch), arch)
-        if int(hex1,16)>=int(original,16) or len(hex1)!=arch/4+2:
+        print(hex1)
+        print(int(hex1,16)>=int(original,16))
+        print(len(hex1)!=arch/4+2)
+        #breakpoint()
+        if int(hex1,16)<=int(original,16) or len(hex1)!=arch/4+2: #True False
+            print("Add branch 1")
             continue
         product = beautify_hex(hex(int(original[2:], 16)-int(hex1[2:], 16)), arch)
         if (int(hex1,16)+int(product, 16)>=int("0x"+"f"*int(arch/4), 16)):
+            print("Add branch 2")
             continue
         if not contains_bad_chars(product) and len(product)==len(hex1):
+            verified_no_xor = True
             return [hex1, product]
+        print("Jumping Back")
     return [original, "0x00000000"]
 
 #IMPORTANT: MAKE SURE THAT WHEN SOMETHING IS BEING ADDED, IT IS WITH ADD, RIGHT NOW IT IS DOING SUB
+@debughook_verbose
 def random_hex_sub_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
@@ -563,7 +579,7 @@ class Shellcode:
     def dec_jump(self, instructions, index):
         instructions[index] = instructions[index].split(" ")[0] + " " + hex(int(instructions[index].split(" ")[1], 16)-1)
     
-    #@debughook_verbose
+    @debughook_verbose
     #Keystone is subtracting 2 from the jump when assembling
     def add_jump(self, instructions, new_index, new_target_ind): #Eventually, when stated, it will append the target if it matches the new index
 
@@ -571,12 +587,16 @@ class Shellcode:
         #Then insert a new jump instruction accounting for everything between 
         #If forward start with i+1 to target
         #If backward start with i back to target
+        print(new_index)
+        print(new_target_ind)
         jump_list_insert_index:int = 0
         for index, instr in enumerate(self.jumpIndexes):
             if new_index<instr:
                 jump_list_insert_index=index
-        self.jumpIndexes.insert(index, new_index)
-        self.jumpTargets.insert(index, new_target_ind+1)
+                break
+        print(f"JUMP: {jump_list_insert_index}, {new_index}, {new_target_ind}")
+        self.jumpIndexes.insert(jump_list_insert_index, new_index)
+        self.jumpTargets.insert(jump_list_insert_index, new_target_ind)
         
         add_to_jump = 0x0
         instruction_count = 0
@@ -603,7 +623,19 @@ class Shellcode:
                     instruction_count+=1
 
         #If the index is a jump target, update the length to skip the jump
+        print(f"Jump Targets before: {self.jumpTargets}")
+        for i in self.jumpIndexes:
+            print(instructions[i])
+        print(f"Jump Indexes before: {self.jumpIndexes}")
+        b4 = len(self.jumpTargets)
+        print(new_index)
         self.insertWithCare(instructions, f"jmp {hex(add_to_jump)}", new_index, False, True) #This screws it up, add option to not add it
+        print(instructions)
+        print(instructions[new_index])
+        print(self.jumpTargets)
+        print(f"Before Len: {b4} Jump Ind: {len(self.jumpIndexes)}") #jump indexes adds 1 more than necessary
+        print(f"After Len: {len(self.jumpTargets)} Jump Ind: {len(self.jumpIndexes)}")
+        breakpoint()
         for ind_in_targets, target in enumerate(self.jumpTargets):
             if(new_index==target):
                 if self.is_64:
@@ -612,6 +644,8 @@ class Shellcode:
                     else:
                         instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble64([f"jmp {hex(add_to_jump)}"])))
                 else:
+                    print(ind_in_targets)
+                    print(self.jumpIndexes)
                     if int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)<0:
                         instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble([f"jmp {hex(add_to_jump)}"])))
                     else:
@@ -623,6 +657,10 @@ class Shellcode:
         
         #Temporary
         self.jumpIndexes[jump_list_insert_index]-=1
+        print(f"Jump Insert Index: {jump_list_insert_index}")
+        print(f"Jump Insert Index in jumps: {self.jumpIndexes[jump_list_insert_index]}")
+        print(instructions[self.jumpIndexes[jump_list_insert_index]])
+        breakpoint()
 
 
 
@@ -732,7 +770,7 @@ class Shellcode:
                     findMore = False
         return targetIndexArray
     
-    #@debughook_verbose
+    @debughook_verbose
     #Note to self, next time there is a jump target error, checl here
     def findJumpTargetsRelative(self, instructions:list) -> list: 
         indexArray = []
@@ -743,9 +781,12 @@ class Shellcode:
             if offset>=0:
                 for j in range(i,len(instructions)):
                     #print(targetIndexArray)
-                    if compareToOffset==offset:#Must be exact offset, THIS COULD BE A PROBLEM LATER
+                    #print("MORE")
+                    if compareToOffset>=offset:#Must be exact offset, THIS COULD BE A PROBLEM LATER
+                        #Make sure it's not 1 index off
                         debugJumpTargets.append(i)
                         targetIndexArray.append(j)
+                        break
                     if self.is_64:
                         compareToOffset += int(hex(len(Shellcode.assemble64([instructions[j]]))), 16)
                     else:
@@ -753,6 +794,7 @@ class Shellcode:
             elif offset<0:
                 for j in range(i-1, 0, -1):
                     #print(targetIndexArray)
+                    #print("LESS")
                     if self.is_64:
                         compareToOffset-=len(Shellcode.assemble64([instructions[j]]))
                     else:
@@ -760,6 +802,7 @@ class Shellcode:
                     if compareToOffset<=offset:
                         debugJumpTargets.append(i)
                         targetIndexArray.append(j)
+                        break
         self.jumpTargets = targetIndexArray
         return targetIndexArray
     
@@ -808,8 +851,9 @@ class Shellcode:
             self.refresh_jumps()
 
     #Meant to be used inside a decorator
-    #@debughook_verbose
+    @debughook_verbose
     def insert_bytes(self, instructions:list[str], added_bytes:int, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
+        print(f"Before: {self.jumpIndexes}")
         if shift_target is None:
             shift_target = False
         if include_if_eq is None:
@@ -832,28 +876,21 @@ class Shellcode:
                             instructions[self.jumpIndexes[j]]= instructions[self.jumpIndexes[j]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1],16)+added_bytes))#Accounts for differences in each instruction
                         else:
                             instructions[self.jumpIndexes[j]]= instructions[self.jumpIndexes[j]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1],16)+added_bytes))#Accounts for differences in each instruction
-                        self.jumpIndexes[j]+=1
-                        self.jumpTargets[j] += 1
                     if self.is_64:
                         self.jumpAddition[i].append(added_bytes)
                     else:
                         self.jumpAddition[i].append(added_bytes)
                 elif self.jumpTargets[i]<self.jumpIndexes[i] and index>self.jumpTargets[i]: #If backwards and after the target
                     instructions[i] = potentialAdd
-                    for j in range(i, len(self.jumpIndexes)):#Add offset of bytes to other jumps too
-                        self.jumpIndexes[j]+=1
                     if i+1<len(self.jumpIndexes): #Add bytes to future jumps
                         for j in range(i+1, len(self.jumpTargets)):
                             if self.is_64:
                                 instructions[self.jumpIndexes[j]] = instructions[self.jumpIndexes[j]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1],16)+added_bytes))#Accounts for differences in each instruction
                             else:
                                 instructions[self.jumpIndexes[j]] = instructions[self.jumpIndexes[j]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1],16)+added_bytes))#Accounts for differences in each instruction
-                            self.jumpTargets[j]+=1
                     self.jumpAddition[i].append(0)#-len(assemble([toAdd]))) #It is 0 because it is location relative to the start of the executable code
                 else:
                     for j in range(i+1, len(self.jumpIndexes)):
-                        self.jumpIndexes[j] += 1
-                        self.jumpTargets[j] += 1
                         instructions[self.jumpIndexes[j]] = instructions[self.jumpIndexes[j]].split(" ")[0] + " "+str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1], 16)))
                     if self.is_64:
                         self.jumpAddition[i].append(added_bytes)
@@ -865,39 +902,37 @@ class Shellcode:
                     addedTypes.append("Between Before")
                     self.jumpAddition[i].append(added_bytes)
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[i]].split(" ")[1],16)+added_bytes))
-                    if not shift_target:
-                        self.jumpTargets[i]+=1
                 else:
                     addedTypes.append("Between Before")
                     self.jumpAddition[i].append(added_bytes)
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[i]].split(" ")[1],16)+added_bytes))
                     if not shift_target:
-                        self.jumpTargets[i]+=1
+                        pass
             elif index==self.jumpIndexes[i] and index<self.jumpTargets[i]:#If jumpIndexes<index<jumpTargets, if inserting between
-                self.jumpIndexes[i]+=1
                 if not shift_target:
-                    self.jumpTargets[i]+=1
+                    pass
             elif index>self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<index<=jump
                 if self.is_64:
                     self.jumpAddition[i].append(added_bytes)
-                    self.jumpIndexes[i]+=1
                     shellcode = Shellcode.assemble64(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble64([instructions[self.jumpIndexes[i]]]))
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-added_bytes
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble64(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
                 else:
+                    print(self.jumpIndexes[i])
                     self.jumpAddition[i].append(added_bytes)
-                    self.jumpIndexes[i]+=1
                     shellcode = Shellcode.assemble(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble([instructions[self.jumpIndexes[i]]]))
+                    print(instructions)
+                    print(instructions[self.jumpIndexes[i]])
+                    print(self.jumpIndexes[i])
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-added_bytes
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
             elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<=index<jump
-                self.jumpIndexes[i]+=1
                 if not shift_target:
-                    self.jumpTargets[i]+=1
+                    pass
                 addedTypes.append("Between Backwards")
                 if self.is_64:
                     self.jumpAddition[i].append(added_bytes)
@@ -910,9 +945,7 @@ class Shellcode:
 
             elif index<=self.jumpTargets[i] and index<=self.jumpIndexes[i]:
                 addedTypes.append("Below Both")
-                self.jumpIndexes[i]+=1
-                if not shift_target:
-                    self.jumpTargets[i]+=1
+        print(f"After: {self.jumpIndexes}")
 
     #@debughook_verbose
     def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:

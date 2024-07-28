@@ -20,6 +20,7 @@ def generate_random_bytes(num_bytes:int) -> bytes:
 
 #@adding_bad_bytes
 def insert_garbage(self, instructions) -> int:
+    print(f"Jump Indexes Before: {self.jumpIndexes}")
     shellcode_byte_locations = []
     jump_target:int = randint(1,int((len(instructions)-1)))
     jump_index:int = jump_target - 1
@@ -42,6 +43,11 @@ def insert_garbage(self, instructions) -> int:
     #breakpoint()
     for i in shellcode_byte_locations:
         self.shellcode = self.shellcode[0:i]+garb_bytes+self.shellcode[i:]
+
+    print(f"Jump Indexes After: {self.jumpIndexes}")
+    for i in self.jumpIndexes:
+        print(i)
+        print(instructions[i])
     return num_bytes
 
 Shellcode.insert_garbage = insert_garbage
