@@ -3,5 +3,5 @@ Metamorpheus is a metamorphic shellcode obfuscator that is designed to evade sig
 Metamorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file.
 
 Known Bugs: 
-- Logic Swap will not work on metasploit shellcode. I am currently working on a fix.
+- Logic Swap will not work as intended on metasploit shellcode. I am currently working on a fix.
 - Register Swap does not check if a jmp is within the main subroutine or not, it may not work within encapsulated jumps.
