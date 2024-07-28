@@ -22,6 +22,15 @@ def bytesToString(byteArray:bytes) -> str:
     return string
 
 
+def unsplit_string(split_list:list[str], split_by:str) -> str:
+    returnable = ""
+    for i, split in enumerate(split_list):
+        if i>=1:
+            returnable+=split_by+split
+        else:
+            returnable+=split
+    return returnable
+
 def findall_regular(string:str, phrase:str) -> list:
     returnable = []
     findIndex = 0
@@ -146,19 +155,31 @@ def find_first_register_uses(instructions:list[str], registers:list[str], startI
 #Put the new instruction after the jump or target if it is register dependent, make the end index within the same subroutine
 #update to be in same subroutine
 #When something is dereferenced, all hell breaks loose
-@debughook_verbose
+#@debughook_verbose
+#If there is an issue with xor byte ptr...
+
 def get_register_size(instruction:str) -> int:
+#    if(instruction.split(',')[0]=="xor byte"):
+    #Get the words of the function first:
+    for i in instruction.split(" "):
+        match i.lower():
+            case "byte":
+                return 8
+            case "word":
+                return 16
+            case "dword":
+                return 32
+            case "qword":
+                return 64
     try:
         if not instruction.split(" ")[1]:
             return 0
         for i in range(len(instruction.split(" "))):
-            print(i)
-            print(instruction.split()[i])
-            if not instruction.split(" ")[1][i]:
-                print("NOT 1")
+            if len(instruction.split(" ")[1])<2:
+                #print("NOT 1")
                 return 0
     except IndexError:
-        print("NOT 2")
+        #print("NOT 2")
         return 0
     if instruction.split(" ")[1][0]=='r':
         return 64
@@ -173,6 +194,7 @@ def get_register_size(instruction:str) -> int:
     else:
 
         if len(instruction.split("["))==1:
+            #print("None")
             return 0
         else:
             if instruction.split("[")[1][0]=='r':
@@ -188,7 +210,7 @@ def get_register_size(instruction:str) -> int:
             else:
                 return 0
         return 0
-print(get_register_size("mov word ptr [esp + 0x3c], 0x101"))
+#print(get_register_size("mov word ptr [esp + 0x3c], 0x101"))
 
 def registerClassMain(base:str) -> list:
     returnable = []
@@ -239,13 +261,13 @@ def unbeautify_hex(hex_original:str) -> str: #
         print("Index Error from unbeautify_hex")
         return "0x"+hex_original[exclusivity_index:]
 
-@debughook_verbose
+#@debughook_verbose
 def random_hex(arch:int) -> str:
     if arch%4==0:
         length_of_hex = int(arch/4)
         string = "0x"
         while(string == "0x"):
-            print("RANDOM_HEX")
+            #print("RANDOM_HEX")
             for i in range(length_of_hex):
                 string += (random.choice("0123456789abcdef"))
             if not contains_bad_chars(string):
@@ -264,48 +286,48 @@ def random_hex(arch:int) -> str:
 #            return [hex1, product]
 #    return [original, "0x00000000"]
 
-@debughook_verbose
+#@debughook_verbose
 def random_hex_xor_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
     original = beautify_hex(original, arch)
     while not(verified_no_xor): #verify the product has no badchars:
         hex1 = beautify_hex(random_hex(arch), arch) #Random hex is breaking because arch is hard to find fo 0x101
-        print(hex1)
-        breakpoint()
+        #print(hex1)
+        #breakpoint()
         product = beautify_hex(hex(int(original[2:], 16)^int(hex1[2:], 16)), arch)
         if not contains_bad_chars(product):
             return [hex1, product]
     return [original, "0x00000000"]
 
-@debughook_verbose
+#@debughook_verbose
 def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
     original = beautify_hex(original, arch) #Have an exception handler in here
     while not(verified_no_xor): #verify the product has no badchars:
-        print("WHILE CALL")
+        #print("WHILE CALL")
         #verify that if added with the original, it will not go above int("0x"+"f"*arch/4, 16)
         hex1 = beautify_hex(random_hex(arch), arch)
-        print(hex1)
-        print(int(hex1,16)>=int(original,16))
-        print(len(hex1)!=arch/4+2)
+        #print(hex1)
+        #print(int(hex1,16)>=int(original,16))
+        #print(len(hex1)!=arch/4+2)
         #breakpoint()
         if int(hex1,16)<=int(original,16) or len(hex1)!=arch/4+2: #True False
-            print("Add branch 1")
+            #print("Add branch 1")
             continue
         product = beautify_hex(hex(int(original[2:], 16)-int(hex1[2:], 16)), arch)
         if (int(hex1,16)+int(product, 16)>=int("0x"+"f"*int(arch/4), 16)):
-            print("Add branch 2")
+            #print("Add branch 2")
             continue
         if not contains_bad_chars(product) and len(product)==len(hex1):
             verified_no_xor = True
             return [hex1, product]
-        print("Jumping Back")
+        #print("Jumping Back")
     return [original, "0x00000000"]
 
 #IMPORTANT: MAKE SURE THAT WHEN SOMETHING IS BEING ADDED, IT IS WITH ADD, RIGHT NOW IT IS DOING SUB
-@debughook_verbose
+#@debughook_verbose
 def random_hex_sub_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
@@ -587,7 +609,7 @@ class Shellcode:
                 rest_of_instrs-=len(Shellcode.assemble(instructions[0:index+1]))
             if jump_number<rest_of_instrs:
                 return False
-        print(f"Returning within scope: {instructions[index]}")
+        #print(f"Returning within scope: {instructions[index]}")
         return True
 
     #@debughook_verbose
