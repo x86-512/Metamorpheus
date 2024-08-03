@@ -8,7 +8,7 @@ Feature List:
 | Useless Instructions | Working |
 | Garbage Bytes | Working |
 | Logic Replacement | Runtime Issues |
-| Register Swap | Runtime Issues |
+| Register Swap (Universal, Subroutine) | Limited / Runtime Issues |
 | Encryption | Unimplemented due to issues |
 
 Known Bugs: 
