@@ -9,7 +9,7 @@ Feature List:
 | Garbage Bytes | Working |
 | Logic Replacement | Runtime Issues |
 | Register Swap (Universal, Subroutine) | Limited / Runtime Issues |
-| Encryption | Unimplemented due to issues |
+| Encryption | Unimplemented due to AESDEC issues |
 
 Known Bugs: 
 - Logic Swap will not work as intended on metasploit shellcode. I am currently working on a fix.
