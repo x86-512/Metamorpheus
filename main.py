@@ -12,7 +12,8 @@ import sys
 
 def print_help():
     print("Syntax:")
-    print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
+    print("-s: Subroutine Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
+    print("-x: Full Register Swap (\x1b[4mLimited to 63 bytes or less\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
