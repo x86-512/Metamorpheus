@@ -1,4 +1,4 @@
-Metamorpheus is a metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions. For now, I have focused on adding static detection evasion mechanisms, but I might add dynamic detection evasion soon as well.
+Metamorpheus is a metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and IPS Systems. For now, I have focused on adding static detection evasion mechanisms, but I might add dynamic detection evasion soon as well.
 
 Metamorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
