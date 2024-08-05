@@ -8,12 +8,13 @@ Feature List:
 | Useless Instructions | Working |
 | Garbage Bytes | Working |
 | Logic Replacement | Runtime Issues |
-| Register Swap (Universal) | Limited Functionality |
+| Register Swap (Universal) | Small Shellcode Only |
 | Register Swap (Subroutine) | Not finished |
 | Encryption | Unimplemented due to AESDEC issues |
 
 Note:
 The Universal Register swap only works correctly on certain shellcodes. I recommend only using this on smaller shellcode with little to no subroutines or else your code will not run.
+I am in the process of adding a byte limit to the universal swapper.
 
 Known Bugs: 
 - Logic Swap will not work as intended on metasploit shellcode. I am currently working on a fix.
