@@ -5,8 +5,8 @@ from modules.garbage_jump import *
 from essentials import * #All the modules import from the main file's directory automatically, so there is no need to place this in modules
 #from encryption import * # Work in progress
 
-import compilers.win as wincomp
-import compilers.unix as unicomp
+import compilers.win as wincomp #Use xor to avoid the bad chars problem
+import compilers.unix as unicomp #Use MMAP and stuff to actually get the thing to run, it will need to be RWX tho
 
 import sys
 
