@@ -8,7 +8,8 @@ Feature List:
 | Useless Instructions | Working |
 | Garbage Bytes | Working |
 | Logic Replacement | Runtime Issues |
-| Register Swap (Universal, Subroutine) | Limited / Runtime Issues |
+| Register Swap (Universal) | Limited |
+| Register Swap (Subroutine) | Not finished |
 | Encryption | Unimplemented due to AESDEC issues |
 
 Known Bugs: 
