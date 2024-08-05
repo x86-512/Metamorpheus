@@ -10,7 +10,7 @@ Feature List:
 | Logic Replacement | Runtime Issues |
 | Register Swap (Universal) | Small Shellcode Only |
 | Register Swap (Subroutine) | Not finished |
-| Encryption | Unimplemented due to AESDEC issues |
+| Encryption | Postponed due to AESDEC issues |
 
 Note:
 The Universal Register swap only works correctly on certain shellcodes. I recommend only using this on smaller shellcode with little to no subroutines or else your code will not run.
