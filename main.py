@@ -5,15 +5,15 @@ from modules.garbage_jump import *
 from essentials import * #All the modules import from the main file's directory automatically, so there is no need to place this in modules
 #from encryption import * # Work in progress
 
-import compilers.win as wincomp #Use xor to avoid the bad chars problem
-import compilers.unix as unicomp #Use MMAP and stuff to actually get the thing to run, it will need to be RWX tho
+import compilers.win as wincomp #Use xor to avoid bad chars
+import compilers.unix as unicomp #Use mmap to allocate better and use xor
 
 import sys
 
 def print_help():
     print("Syntax:")
-    print("-s: Subroutine Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
-    print("-x: Full Register Swap (\x1b[4mLimited to 63 bytes or less\x1b[0m)")
+    print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
+    print("-x: Full Register Swap (\x1b[4mLimited to 63 bytes\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
@@ -83,19 +83,19 @@ def main() -> None:
 
         instructions = Shellcode.fixBadMnemonics(instructions)
         instructions = Shellcode.fixJumpErrors(instructions)
-        print(f"\nOriginal Instructions: {instructions}")
+        #print(f"\nOriginal Instructions: {instructions}")
         jumpIndexesOffset = code.findJump(instructions) 
         code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
         code.findJumpTargetsRelative(instructions)
         updatedInstr = instructions
 
-        if sys.argv[1].find("d")>-1:
+        if "d" in sys.argv[1]:
             updatedInstr = code.addDeadCode(instructions)
         #print(updatedInstr)
         #print("\n"*10)
-        if sys.argv[1].find("r")>-1:
+        if "r" in sys.argv[1]:
             updatedInstr = code.logic_replacement(updatedInstr)
-        if (sys.argv[1].find("s"))>-1 and (sys.argv[1].find("x")==-1):
+        if "x" not in sys.argv[1] and "s" in sys.argv[1]:
             #Make sure it is not in a loop, also randomize swapping indexes
             start_of_swap = max(find_first_register_uses(updatedInstr, ["rax", "rcx", "rdx", "rbx"]))
 
@@ -103,7 +103,10 @@ def main() -> None:
             reg_swap_locs = code.update_bounds_of_reg_swap(updatedInstr, start_of_swap)
             updatedInstr = code.registerSwap(updatedInstr, reg_swap_locs[0], reg_swap_locs[1])
 
-        if (sys.argv[1].find("x"))>-1:
+        if "x" in sys.argv[1]:
+            if code.length>63:
+                print("Your shellcode is too large to use the global register swap feature. Your shellcode should be no longer than 63 bytes.")
+                exit()
             updatedInstr = code.registerSwap(updatedInstr)
 
         if 'g' in sys.argv[1]:

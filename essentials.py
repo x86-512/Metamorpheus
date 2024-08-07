@@ -210,6 +210,7 @@ def get_register_size(instruction:str) -> int:
             else:
                 return 0
         return 0
+#print(get_register_size("mov word ptr [esp + 0x3c], 0x101"))
 
 def registerClassMain(base:str) -> list:
     returnable = []
@@ -571,6 +572,42 @@ class Shellcode:
     @property
     def string(self):
         return bytesToString(self.shellcode)
+
+    def get_subroutines(self, instructions:list) -> [list, list]:
+        assembly_offset:int = 0
+        self.jump_split_by_index:list[int] = []
+        self.jump_split_by_offset:list[int] = []
+        for index, instr in enumerate(instructions):
+            assembly_offset+=(len(Shellcode.assemble64([i])) if self.is_64 else len(Shellcode.assemble([i])))
+            for jump_instr in jumpInstructions:
+                if jump_instr in instr:
+                    self.jump_split_by_index.append(index)
+                    self.jump_split_by_offset.append(assembly_offset)
+                    break
+
+    @staticmethod
+    def index_to_offset(is_64:bool, instructions, index):
+        offset = 0x0
+        for i, instr in instructions:
+            if index==i:
+                break
+            offset+=len(Shellcode.assemble64(instr) if is_64 else Shellcode.assemble(instr))
+        return offset
+
+
+    @staticmethod
+    def offset_to_index(is_64:bool, instructions, offset):
+        offset = 0x0
+        returnable = 0
+        for i, instr in instructions:
+            if index==i:
+                returnable = i
+                break
+            offset+=len(Shellcode.assemble64(instr) if is_64 else Shellcode.assemble(instr))
+        return offset
+
+    #def check_jump_in_subroutine(self, subroutine_ind):
+    #    self.jump_split_by_index.
 
     def update_bounds_of_reg_swap(self, instructions:list[str], before:int,after:int = None) -> list[int]:
         #Check if before is in a jump
