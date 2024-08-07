@@ -9,7 +9,7 @@ Feature List:
 | Garbage Bytes | Working |
 | Logic Replacement | Runtime Issues |
 | Register Swap (Universal) | Small Shellcode Only |
-| Register Swap (Subroutine) | Not finished |
+| Register Swap (Subroutine) | In Progress |
 | 128-Bit Encryption | Postponed due to AESDEC issues |
 
 Note:
