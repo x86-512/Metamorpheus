@@ -578,17 +578,70 @@ class Shellcode:
         self.jump_split_by_index:list[int] = []
         self.jump_split_by_offset:list[int] = []
         for index, instr in enumerate(instructions):
-            assembly_offset+=(len(Shellcode.assemble64([i])) if self.is_64 else len(Shellcode.assemble([i])))
+            assembly_offset+=(len(Shellcode.assemble64([instr])) if self.is_64 else len(Shellcode.assemble([instr])))
             for jump_instr in jumpInstructions:
                 if jump_instr in instr:
                     self.jump_split_by_index.append(index)
                     self.jump_split_by_offset.append(assembly_offset)
                     break
 
+    def registers_in_subroutine(self, instructions):
+        found_routine_inds = []
+        for ind, sub_start in enumerate(self.jump_split_by_index[:-1]):
+            found_registers = []
+            for reg in REGISTERS:
+                reg_found = False
+                for subreg in registerClassMain(reg):
+                    for instruction in instructions[sub_start:self.jump_split_by_index[ind+1]]: 
+                        if subreg in instruction:
+                            reg_found = True
+                if reg_found:
+                    found_registers.append(REGISTERS_64[ind] if self.is_64 else REGISTERS[ind])
+            if len(found_registers)==4:
+                found_routine_inds.append([sub_start, self.jump_split_by_index[ind+1]])
+        return found_routine_inds
+
+    def jump_out_of_subroutine(self, instructions, start_ind, end_ind): #Is the jump going out of the subroutine
+        start_offset = Shellcode.index_to_offset(self.is_64, instructions, start_ind)#One to the sta
+        end_offset = Shellcode.index_to_offset(self.is_64, instructions, end_ind)#One to the start
+
+        jumps_out_of_subroutine = []
+
+        for jump_ind, jump_instr in enumerate(self.jumpIndexes):
+            if jump_ind>=start_ind and jump_ind<=end_ind:
+                if '-0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
+                    if(int(Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))-Shellcode.index_to_offset(self.is_64, instructions, start_ind)),16)<int(jump_instr.split(" ")[1], 16):
+                        jump_out_of_subroutine.append(jump_ind)
+
+                elif '0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
+                    if(int(Shellcode.index_to_offset(self.is_64, instructions, end_ind) - Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))),16)>int(jump_instr.split(" ")[1], 16):
+                        jump_out_of_subroutine.append(jump_ind)
+        return jump_out_of_subroutine
+
+    def jump_in_to_subroutine(self, instructions, start_ind, end_ind):
+        start_offset = Shellcode.index_to_offset(self.is_64, instructions, start_ind)#One to the sta
+        end_offset = Shellcode.index_to_offset(self.is_64, instructions, end_ind)#One to the start
+
+        jumps_in_to_subroutine = []
+
+        for jump_ind, jump_instr in enumerate(self.jumpIndexes):
+            if jump_ind<start_ind and jump_ind>end_ind:
+                if '-0x' in jump_instr: 
+                    jump_to = Shellcode.index_to_offset(jump_ind)+len(Shellcode.assemble64(jump_ind) if self.is_64 else Shellcode.assemble(jump_ind))-int(jump_instr.split(" ")[1][1:],16)
+                    if jump_to>=start_ind and jump_to<=end_ind:
+                        jumps_in_to_subroutine.append(jump_ind)
+                elif '0x' in jump_instr: 
+                    jump_to = Shellcode.index_to_offset(jump_ind)+len(Shellcode.assemble64(jump_ind) if self.is_64 else Shellcode.assemble(jump_ind))+int(jump_instr.split(" ")[1][1:],16)
+                    if jump_to>=start_ind and jump_to<=end_ind:
+                        jumps_in_to_subroutine.append(jump_ind)
+        return jumps_in_to_subroutine
+
+
+
     @staticmethod
     def index_to_offset(is_64:bool, instructions, index):
         offset = 0x0
-        for i, instr in instructions:
+        for i, instr in enumerate(instructions):
             if index==i:
                 break
             offset+=len(Shellcode.assemble64(instr) if is_64 else Shellcode.assemble(instr))
@@ -927,6 +980,7 @@ class Shellcode:
         #JUMPADDITION IS WHAT IS BEING ADDED OR SUBBED FROM THE JUMP
         #If len of toAdd is invalid, then just add 0
 
+        #Check the jump to see if it is being modified if it is out of scope
         for i in range(len(self.jumpIndexes)):
 
             self.jumpAddition.append([])
@@ -999,6 +1053,22 @@ class Shellcode:
             elif index<=self.jumpTargets[i] and index<=self.jumpIndexes[i]:
                 addedTypes.append("Below Both")
 
+    def update_subroutines(self, toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
+        if shift_target is None:
+            shift_target = False
+        if include_if_eq is None:
+            include_if_eq = True
+        added_bytes:int = len(Shellcode.assemble64([toAdd]) if self.is_64 else Shellcode.assemble([toAdd]))
+        for routine_point, routine_ind in enumerate(self.jump_split_by_index):
+            if index<=routine_ind and not include_if_eq:
+                self.jump_split_by_index[routine_point]+=1
+                self.jump_split_by_offset[routine_point]+=added_bytes
+            elif index==routine_ind and include_if_eq:
+                pass
+            elif index<routine_ind and include_if_eq:
+                self.jump_split_by_index[routine_point]+=1
+                self.jump_split_by_offset[routine_point]+=added_bytes
+
     #@debughook_verbose
     def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
         if shift_target is None:
@@ -1007,6 +1077,7 @@ class Shellcode:
             include_if_eq = True
         instructions.insert(index, toAdd)
         addedTypes = []
+        self.update_subroutines(toAdd, index, absolute, shift_target, include_if_eq)
         #JUMPADDITION IS WHAT IS BEING ADDED OR SUBBED FROM THE JUMP
         #If len of toAdd is invalid, then just add 0
         for i in range(len(self.jumpIndexes)):

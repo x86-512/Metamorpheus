@@ -83,12 +83,15 @@ def main() -> None:
 
         instructions = Shellcode.fixBadMnemonics(instructions)
         instructions = Shellcode.fixJumpErrors(instructions)
-        #print(f"\nOriginal Instructions: {instructions}")
+
+        print(f"\nOriginal Instructions: {instructions}")
+
         jumpIndexesOffset = code.findJump(instructions) 
         code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
         code.findJumpTargetsRelative(instructions)
         updatedInstr = instructions
 
+        code.get_subroutines(updatedInstr)
         if "d" in sys.argv[1]:
             updatedInstr = code.addDeadCode(instructions)
         #print(updatedInstr)
@@ -97,11 +100,33 @@ def main() -> None:
             updatedInstr = code.logic_replacement(updatedInstr)
         if "x" not in sys.argv[1] and "s" in sys.argv[1]:
             #Make sure it is not in a loop, also randomize swapping indexes
-            start_of_swap = max(find_first_register_uses(updatedInstr, ["rax", "rcx", "rdx", "rbx"]))
+            #start_of_swap = max(find_first_register_uses(updatedInstr, ["rax", "rcx", "rdx", "rbx"]))
 
             #not inserting xchg instructions
-            reg_swap_locs = code.update_bounds_of_reg_swap(updatedInstr, start_of_swap)
-            updatedInstr = code.registerSwap(updatedInstr, reg_swap_locs[0], reg_swap_locs[1])
+
+            #for instruction in code.jumpIndexes:
+            #    print(instructions[instruction])
+            #breakpoint()
+
+            #code.jump_out_of_subroutine(updatedInstr, )
+            #print(code.jump_split_by_index)
+            #reg_swap_locs = code.update_bounds_of_reg_swap(updatedInstr, start_of_swap)
+
+            #print(updatedInstr)
+            #print(code.registers_in_subroutine(updatedInstr))
+            full_subroutines = code.registers_in_subroutine(updatedInstr)
+            if len(code.registers_in_subroutine(updatedInstr))==0:
+                print("Your shellcode does not use the a, b, c, and d registers in the same subroutine")
+                exit()
+            reg_swap_conditional_subroutines = full_subroutines[0] 
+            #print(reg_swap_conditional_subroutines)
+            reg_swap_locs = reg_swap_conditional_subroutines[0] if len(reg_swap_conditional_subroutines)>0 else -1
+            if reg_swap_locs==-1:
+                print("Register swap not completed due to the required contitions not being met")
+                exit()
+            #print(reg_swap_locs)
+            else:
+                updatedInstr = code.registerSwap(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
 
         if "x" in sys.argv[1]:
             if code.length>63:
