@@ -595,7 +595,7 @@ def registerSwap(self, instructions:list, start_ind_list = 0, end_ind_list = -1)
     return newInstructions
 
 def registerSwapSubroutine(self, instructions:list, start_ind_list = 0, end_ind_list = -1) -> list:
-    #global jumpAddition
+    #For jumps, check them with the function, for jumps that are marked, surround them with xchg stuff
     if start_ind_list<0 or start_ind_list>=len(instructions):
         start_ind_list = 0
     if end_ind_list<0 or end_ind_list>=len(instructions) or end_ind_list>start_ind_list:
@@ -722,6 +722,17 @@ def registerSwapSubroutine(self, instructions:list, start_ind_list = 0, end_ind_
 
                 markedInstructions.append(i)
                 markedInstructionsXchg.append(notableXchgMapList[j])
+    #Get the whole instruction set for jump indexes, the jump outs will be marked, the jump ins will be too
+
+    for i in self.jump_out_of_subroutine(newInstructions, start_ind_list, end_ind_list):
+        markedInstructions.append(i)
+        print(i)
+
+
+    for i in self.jump_in_to_subroutine(newInstructions, start_ind_list, end_ind_list):
+        markedInstructions.append(i)
+        print(i)
+
     for i, letter in enumerate(fullRegisterList):#Change it now
         for j, subregister in enumerate(letter):
             for k, instruction in enumerate(instructions[start_ind_list:end_ind_list+1], start=start_ind_list):#Check if multiple rets change len
@@ -1079,4 +1090,5 @@ def registerSwapSubroutine(self, instructions:list, start_ind_list = 0, end_ind_
 
 Shellcode.randomizeMappingMain = randomizeMappingMain
 Shellcode.registerSwap = registerSwap
+Shellcode.registerSwapSubroutine = registerSwapSubroutine
 Shellcode.offsetToRegister = offsetToRegister
