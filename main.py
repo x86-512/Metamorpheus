@@ -126,7 +126,7 @@ def main() -> None:
                 exit()
             #print(reg_swap_locs)
             else:
-                updatedInstr = code.registerSwap(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
+                updatedInstr = code.registerSwapSubroutine(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
 
         if "x" in sys.argv[1]:
             if code.length>63:

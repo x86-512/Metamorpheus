@@ -611,12 +611,12 @@ class Shellcode:
             if jump_ind>=start_ind and jump_ind<=end_ind:
                 if '-0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
                     if(int(Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))-Shellcode.index_to_offset(self.is_64, instructions, start_ind)),16)<int(jump_instr.split(" ")[1], 16):
-                        jump_out_of_subroutine.append(jump_ind)
+                        jumps_out_of_subroutine.append(jump_ind)
 
                 elif '0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
                     if(int(Shellcode.index_to_offset(self.is_64, instructions, end_ind) - Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))),16)>int(jump_instr.split(" ")[1], 16):
-                        jump_out_of_subroutine.append(jump_ind)
-        return jump_out_of_subroutine
+                        jumps_out_of_subroutine.append(jump_ind)
+        return jumps_out_of_subroutine
 
     def jump_in_to_subroutine(self, instructions, start_ind, end_ind):
         start_offset = Shellcode.index_to_offset(self.is_64, instructions, start_ind)#One to the sta
@@ -644,7 +644,7 @@ class Shellcode:
         for i, instr in enumerate(instructions):
             if index==i:
                 break
-            offset+=len(Shellcode.assemble64(instr) if is_64 else Shellcode.assemble(instr))
+            offset+=len(Shellcode.assemble64([instr]) if is_64 else Shellcode.assemble([instr]))
         return offset
 
 
