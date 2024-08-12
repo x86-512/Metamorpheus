@@ -19,5 +19,4 @@ The Universal Register swap only works correctly on certain shellcodes. I recomm
 I am in the process of adding a byte limit to the universal swapper.
 
 Known Bugs: 
-- Logic Swap will not work as intended on metasploit shellcode. I am currently working on a fix.
-- Register Swap does not check if a jmp is within the main subroutine or not, it may not work within encapsulated jumps.
+- Subroutine Register Swap does not correctly add xchg instructions
