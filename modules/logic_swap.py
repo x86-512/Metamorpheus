@@ -157,15 +157,15 @@ def logic_replacement(self, instructions:list) -> list:
                     max_reg:int = i+1
                     max_reg_possibles:list[int] = []
                     for k, after_instr in enumerate(instructions[i+1:], start=i+1): #Also check if it is register dependent
-                        print(k)
-                        print(after_instr)
+                        #print(k)
+                        #print(after_instr)
                         for sub in registerClassMain(register):
                             #print(sub)
                             if sub in after_instr:
                                 max_reg_possibles.append(k)
                                 break
                         for crit in critical_instrs:
-                            print(crit)
+                            #print(crit)
                             if crit in after_instr:
                                 max_reg_possibles.append(k)
                                 break
@@ -223,15 +223,15 @@ def logic_replacement(self, instructions:list) -> list:
                         max_reg:int = i+1
                         max_reg_possibles:list[int] = []
                         for k, after_instr in enumerate(instructions[i+1:], start=i+1): #Also check if it is register dependent
-                            print(k)
-                            print(after_instr)
+                            #print(k)
+                            #print(after_instr)
                             for sub in registerClassMain(register):
                                 #print(sub)
                                 if sub in after_instr:
                                     max_reg_possibles.append(k)
                                     break
                             for crit in critical_instrs:
-                                print(crit)
+                                #print(crit)
                                 if crit in after_instr:
                                     max_reg_possibles.append(k)
                                     break
