@@ -13,7 +13,7 @@ import sys
 def print_help():
     print("Syntax:")
     print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
-    print("-x: Full Register Swap (\x1b[4mLimited to 63 bytes\x1b[0m)")
+    print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
@@ -47,12 +47,12 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode:
                 is64 = True
             actual_code = actual_code[len(actual_code.split("\n")[0]):]
     except FileNotFoundError:
-        print("Shellcode.txt not found")
+        print("Shellcode.txt not found, please make one and put it in the local directory")
         exit()
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g']
+    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g' 'v']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
@@ -63,6 +63,10 @@ def main() -> None:
         sys.argv[1]
     except IndexError:
         args_present = False
+    
+    verbose:bool = False
+    if 'v' in sys.argv[-1]:
+        verbose = True
 
     code:Shellcode = loadShellcodeFromFile("shellcode.txt")
     if code.is_64_bit():
@@ -84,7 +88,9 @@ def main() -> None:
         instructions = Shellcode.fixBadMnemonics(instructions)
         instructions = Shellcode.fixJumpErrors(instructions)
 
-        print(f"\nOriginal Instructions: {instructions}")
+        #Add a verbose option
+        if verbose:
+            print(f"\nOriginal Instructions: \n{instructions}")
 
         jumpIndexesOffset = code.findJump(instructions) 
         code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
@@ -150,8 +156,11 @@ def main() -> None:
                 unicomp.compile(64 if code.is_64 else 32,code.string)
 
         #updatedInstr = code.encrypt(updatedInstr)
-        print(f"\nUpdated Instructions:\n{updatedInstr}\n")
-        print(f"Shellcode:\n{code.string}")
+
+        #Verbose option here
+        if verbose:
+            print(f"\nUpdated Instructions:\n{updatedInstr}\n")
+        print(f"New Shellcode:\n{code.string}")
         print(f"\nShellcode Length: {code.length} bytes")
     else:
         print_help()
