@@ -12,7 +12,7 @@ Feature List:
 | Register Swap (Subroutine) | Experimental, Unstable |
 | 128-Bit Encryption | Postponed due to AESDEC issues |
 
-*This module has not been tested on real-world shellcode yet
+Any module that is 'working' has been successfully tested on real-world shellcode.
 
 Note:
 The Universal Register swap only works correctly on certain shellcodes. I recommend only using this on smaller shellcode with little to no subroutines or else your code will not run.
