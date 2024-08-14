@@ -5,7 +5,7 @@ Metamorpheus is designed to work in a R-E memory region, so you can place obfusc
 Feature List:
 | Feature | Status |
 | --- | --- |
-| Useless Instructions | Runtime Issues |
+| Useless Instructions | Working |
 | Garbage Bytes | Working |
 | Logic Replacement | Working |
 | Register Swap (Universal) | Small Shellcode Only |
