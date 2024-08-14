@@ -52,7 +52,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode:
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g' 'v']
+    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g', 'v']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
