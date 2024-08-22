@@ -17,6 +17,7 @@ def print_help():
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
+    print("-v: Verbose mode")
 
 
 def findBetweenEach(string:str, phrase:str) -> list:
