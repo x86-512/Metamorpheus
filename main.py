@@ -12,8 +12,8 @@ import sys
 
 def print_help():
     print("Syntax:")
-    print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
-    print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)")
+    #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
+    #print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
@@ -52,7 +52,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode:
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 's', 'x', 'g', 'v']
+    valid_flags:list[str] = ['d', 'r', 'g', 'v']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
@@ -104,7 +104,7 @@ def main() -> None:
         #print("\n"*10)
         if "r" in sys.argv[1]:
             updatedInstr = code.logic_replacement(updatedInstr)
-        if "x" not in sys.argv[1] and "s" in sys.argv[1]:
+        #if "x" not in sys.argv[1] and "s" in sys.argv[1]:
             #Make sure it is not in a loop, also randomize swapping indexes
             #start_of_swap = max(find_first_register_uses(updatedInstr, ["rax", "rcx", "rdx", "rbx"]))
 
@@ -121,24 +121,24 @@ def main() -> None:
             #print(updatedInstr)
             #print(code.registers_in_subroutine(updatedInstr))
             full_subroutines = code.registers_in_subroutine(updatedInstr)
-            if len(code.registers_in_subroutine(updatedInstr))==0:
-                print("Your shellcode does not use the a, b, c, and d registers in the same subroutine")
-                exit()
-            reg_swap_conditional_subroutines = full_subroutines[0] 
+        #    if len(code.registers_in_subroutine(updatedInstr))==0:
+        #        print("Your shellcode does not use the a, b, c, and d registers in the same subroutine")
+        #        exit()
+        #    reg_swap_conditional_subroutines = full_subroutines[0] 
             #print(reg_swap_conditional_subroutines)
-            reg_swap_locs = reg_swap_conditional_subroutines[0] if len(reg_swap_conditional_subroutines)>0 else -1
-            if reg_swap_locs==-1:
-                print("Register swap not completed due to the required contitions not being met")
-                exit()
+        #    reg_swap_locs = reg_swap_conditional_subroutines[0] if len(reg_swap_conditional_subroutines)>0 else -1
+        #    if reg_swap_locs==-1:
+        #        print("Register swap not completed due to the required contitions not being met")
+        #        exit()
             #print(reg_swap_locs)
-            else:
-                updatedInstr = code.registerSwapSubroutine(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
+        #    else:
+        #        updatedInstr = code.registerSwapSubroutine(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
 
-        if "x" in sys.argv[1]:
-            if code.length>63:
-                print("Your shellcode is too large to use the global register swap feature. Your shellcode should be no longer than 63 bytes.")
-                exit()
-            updatedInstr = code.registerSwap(updatedInstr)
+        #if "x" in sys.argv[1]:
+        #    if code.length>63:
+        #        print("Your shellcode is too large to use the global register swap feature. Your shellcode should be no longer than 63 bytes.")
+        #        exit()
+        #    updatedInstr = code.registerSwap(updatedInstr)
 
         if 'g' in sys.argv[1]:
             code.insert_garbage(updatedInstr)
