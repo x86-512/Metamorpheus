@@ -1,0 +1,4 @@
+python>=3.10
+pip>22.0.0
+keystone-engine=
+capstone=
