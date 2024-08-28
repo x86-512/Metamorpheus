@@ -781,15 +781,44 @@ class Shellcode:
         #Temporary
         self.jumpIndexes[jump_list_insert_index]-=1
 
-
+    @staticmethod
+    def assemble_between(instructions, start_ind, end_ind, is_64:bool) -> int:
+        length = 0
+        for i, instruction in enumerate(instructions[start_ind:end_ind], start=start_ind):
+            length += len(Shellcode.assemble64([instruction]) if is_64 else Shellcode.assemble([instruction]))
+        return length
+    
 
     @staticmethod
-    def fixJumpErrors(instructions:list) -> list:
-        for i in range(len(instructions)): #IDEA: for each jump instruction, 
-            for jumpInstruction in jumpInstructions: 
-                if((targetInstruction:=instructions[i].find(jumpInstruction+" 0x"))==0):
+    def assemble_to_target(instructions, start_ind, end_bytes, is_64:bool) -> int:
+        print(end_bytes)
+        length = 0
+        index = 0
+        for i, instruction in enumerate(instructions[start_ind:], start=start_ind):
+            print(instruction)
+            #print(length)
+            print(hex(length))
+            length += len(Shellcode.assemble64([instruction]) if is_64 else Shellcode.assemble([instruction]))
+            if length==end_bytes:
+                index = i
+                break
+        return index
+
+
+    def fixJumpErrors(self, instructions:list, code:bytes) -> list:
+        for i, current_instr in enumerate(instructions): #IDEA: for each jump instruction, 
+            #print(jumpInstructions)
+            #breakpoint()
+            for j, jumpInstruction in enumerate(jumpInstructions): 
+                if((targetInstruction:=current_instr.find(jumpInstruction+" 0x"))==0 and "loop" not in current_instr):
                     offset = int(instructions[i].split(" ")[1],16)-0x1000
                     instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
+
+                elif((targetInstruction:=current_instr.find(jumpInstruction+" 0x"))==0 and "loop" in current_instr):
+                    offset = (int(Shellcode.disassemble_loop(code, i)[-1])-254 if self.is_64 else int(Shellcode.disassemble_loop(code, i)[-1])-254) #Does not account for forward loops
+                    instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
+                    print(instructions[i])
+
         return instructions
 
     def findJump(self, instructions:list) -> list: #for some reason it is duping instructions, jle is counted as jl
@@ -931,6 +960,8 @@ class Shellcode:
                 length = len(Shellcode.assemble64(instructions[0:index])) #It is doing eax instead of rax
             else:
                 length = len(Shellcode.assemble(instructions[0:index]))
+            if "loop" in instructions[index]:
+                continue
             instructions[index] = instructions[index].split(" ")[0]+ " " + str(hex(int(instructions[index].split(" ")[1], 16)-length))
     
     def refresh_jumps(self, instructions:list[str]) -> None:
@@ -1227,6 +1258,28 @@ class Shellcode:
         for i in disas.disasm(string, 0x1000):
             instructions.append(f"{i.mnemonic} {i.op_str}")
         return instructions
+
+    @staticmethod
+    def disassemble_loop(string:str, index) -> list:
+        disas = Cs(CS_ARCH_X86, CS_MODE_32)
+        instructions = []
+        byteLocs = b''
+        for i in disas.disasm(string, 0x1000):
+            instructions.append(f"{i.mnemonic} {i.op_str}")
+            if "loop" in str(i.mnemonic) and len(instructions)-1==index:
+                byteLocs = i.bytes
+        return byteLocs
+
+    @staticmethod
+    def disassemble_loop64(string:str, index) -> list:
+        disas = Cs(CS_ARCH_X86, CS_MODE_32)
+        instructions = []
+        byteLocs = b''
+        for i in disas.disasm(string, 0x1000):
+            instructions.append(f"{i.mnemonic} {i.op_str}")
+            if "loop" in str(i.mnemonic) and len(instructions)-1==index:
+                byteLocs = i.bytes
+        return byteLocs
 
     @staticmethod
     def disassemble64(code:str) -> list:

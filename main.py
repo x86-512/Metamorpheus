@@ -87,16 +87,17 @@ def main() -> None:
             instructions = Shellcode.disassemble(code.getCode())
 
         instructions = Shellcode.fixBadMnemonics(instructions)
-        instructions = Shellcode.fixJumpErrors(instructions)
+        instructions = code.fixJumpErrors(instructions, code.getCode()) #Update to fix loop instructions
 
         #Add a verbose option
         if verbose:
             print(f"\nOriginal Instructions: \n{instructions}")
 
         jumpIndexesOffset = code.findJump(instructions) 
-        code.getRelativeJmpOffset(instructions, jumpIndexesOffset)
+        code.getRelativeJmpOffset(instructions, jumpIndexesOffset) # Breaks the loop
+
         code.findJumpTargetsRelative(instructions)
-        updatedInstr = instructions
+        updatedInstr = instructions 
 
         code.get_subroutines(updatedInstr)
         if "d" in sys.argv[1]:
