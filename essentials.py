@@ -817,7 +817,6 @@ class Shellcode:
                 elif((targetInstruction:=current_instr.find(jumpInstruction+" 0x"))==0 and "loop" in current_instr):
                     offset = (int(Shellcode.disassemble_loop(code, i)[-1])-254 if self.is_64 else int(Shellcode.disassemble_loop(code, i)[-1])-254) #Does not account for forward loops
                     instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
-                    print(instructions[i])
 
         return instructions
 
