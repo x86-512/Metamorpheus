@@ -18,6 +18,7 @@ def print_help():
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
     print("-v: Verbose mode")
+    print("Shellcode.txt syntax:\nArch(32 or 64)\nShellcode here, with or without \"")
 
 
 def findBetweenEach(string:str, phrase:str) -> list:
