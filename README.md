@@ -1,5 +1,5 @@
 # Polymorpheus
-__This project is undergoing rewrite to reduce overcomplexity and add support for new features__
+__This project is undergoing rewrite to reduce overcomplexity and to simplify the process of adding new features__
 
 Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. For now, I have focused on adding static detection evasion mechanisms, but I might add dynamic detection evasion soon as well.
 
