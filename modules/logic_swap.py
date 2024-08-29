@@ -40,12 +40,14 @@ def xor_replacement_suggestion(instruction:str) -> list:
         return [instruction, "0x00000000"]
     xor_pair = random_hex_xor_pair(target_num, arch)
     updated_instruction = instruction.replace(target_num, xor_pair[0])
-    returnable:list = [updated_instruction,xor_pair[1]] 
+    returnable:list = [updated_instruction,xor_pair[1], "xor"] 
     return returnable
 
 #@debughook_verbose
 def add_replacement_suggestion(instruction:str) -> list:
     #print("ADD REPLACEMENT CALL")
+    if "0xff" in instruction.lower():
+        return xor_replacement_suggestion(instruction)
     mnemonic = instruction.split(" ")[0]
     target_mnemonic = mnemonic
     if mnemonic=="mov" or mnemonic=="xor":
@@ -76,6 +78,8 @@ def sub_replacement_suggestion(instruction:str) -> list:
         target_mnemonic = "add"
     target_num = instruction.split(", ")[1]
     arch = get_register_size(instruction)
+    if "0xff" in instruction.lower():
+        return xor_replacement_suggestion(instruction)
     if arch==64 and len(unbeautify_hex(target_num))<=10:
         arch=32 #Treat it as 32-bit
     elif arch==64 and len(unbeautify_hex(target_num))>10:
@@ -85,12 +89,22 @@ def sub_replacement_suggestion(instruction:str) -> list:
     returnable:list = [updated_instruction,sub_pair[1], target_mnemonic] 
     return returnable
 
+#def push_change(instructions):
+#    for i, instruction in enumerate(instructions):
+#        if 'push' in instruction.lower():
+
+#If something has to wrap around, just turn it into a xor
+#ALso check to verify that the replacement suggestions don't get updated
+#If and only if xor, you may repeat the logic swap
+#Will be rewritten
 def logic_replacement(self, instructions:list) -> list:
     bad_math_instructions = []
     math_instructions = []
     random_add_limit = calculate_change_limit(len(instructions))
     random_adds = 0
     do_not_change = []
+    previously_added:int = 0
+    no_more_updates = []
     for i, instruction in enumerate(instructions): #remember, these variables are temporary, editing instruction does nothing to instructions
         to_cont = False
         for j in do_not_change:
@@ -119,37 +133,18 @@ def logic_replacement(self, instructions:list) -> list:
             except IndexError:
                 continue
             if instruction.split(" ")[0]==j and instruction.split(', ')[1][0:2]=="0x": #Test for dereferences
+                insert_index = 0
                 if contains_bad_chars(beautify_hex(instruction.split(', ')[1], instruction_size)):
                     targetMnemonic = mnemonic
                     match mnemonic:
                         case "mov":
-                            if random.randint(0,1):
-                                replacement_suggestions = xor_replacement_suggestion(instruction)
-                                targetMnemonic = "xor"
-                            else:
-                                if random.randint(0,1):
-                                    replacement_suggestions = add_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
-                                else:
-                                    replacement_suggestions = sub_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
-                        case "xor":
                             replacement_suggestions = xor_replacement_suggestion(instruction)
                             targetMnemonic = "xor"
-                        case "add":
-                            if random.randint(0,1):
-                                replacement_suggestions = add_replacement_suggestion(instruction)
-                                targetMnemonic = replacement_suggestions[2]
-                            else:
-                                replacement_suggestions = sub_replacement_suggestion(instruction)
-                                targetMnemonic = replacement_suggestions[2]
-                        case "sub":
-                            if random.randint(0,1):
-                                replacement_suggestions = add_replacement_suggestion(instruction)
-                                targetMnemonic = replacement_suggestions[2]
-                            else:
-                                replacement_suggestions = sub_replacement_suggestion(instruction)
-                                targetMnemonic = replacement_suggestions[2]
+                        #case "xor":
+                        #    replacement_suggestions = xor_replacement_suggestion(instruction)
+                        #    targetMnemonic = "xor"
+                        #breaks when add 0xff followed by a bad char
+                        #Add something and then xor it
                     if replacement_suggestions[1]=="0x00000000":
                         continue
                     instructions[i] = replacement_suggestions[0]
@@ -163,59 +158,43 @@ def logic_replacement(self, instructions:list) -> list:
                             #print(sub)
                             if sub in after_instr:
                                 max_reg_possibles.append(k)
-                                break
                         for crit in critical_instrs:
                             #print(crit)
                             if crit in after_instr:
                                 max_reg_possibles.append(k)
-                                break
+                        #if 'push' in after_instr.lower() or 'pop' in after_instr.lower():
+                        #     max_reg_possibles.append(k)
+                        if register.lower() in after_instr.lower():
+                            max_reg_possibles.append(k)
                         for target in self.jumpTargets:
                             #print(f"Target: {target}")
                             if k==target:
                             #if(sub in l or after_instr.split(" ")[0]==crit or k==target): #CHECK THE ENTIRE REGISTER CLASS, ALSO CHECK REG-Dependent instryctuib
                                 #CHECK IT TO MAKE SURE IT IS BEFORE A JUMP_TARGET
                                 max_reg_possibles.append(k)
-                                break
                     if len(max_reg_possibles)>0:
                         max_reg = min(max_reg_possibles)
                     insert_index = random.randint(i+1, max_reg)
                     #print(f"Target_mnemonic: {targetMnemonic}")
                     self.insertWithCare(instructions, f"{targetMnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
-                elif random_adds<random_add_limit:
+                elif random_adds<random_add_limit and i not in no_more_updates:
                     rand_max = random.randint(3,5)
                     change_to_change = random.randint(0,rand_max+4)
-                    if change_to_change<rand_max:#random.randint(0,rand_max-1):
+
+                    #update to only apply probability to xor, logic replacement for add and sub should only occur once, add to a list of indexes and update if anything is updated before an index 
+                    if True:#change_to_change<rand_max:#random.randint(0,rand_max-1):
                         targetMnemonic = mnemonic
+                        replacement_suggestions = [-1,-1,-1]
                         match mnemonic:
                             case "mov":
-                                if random.randint(0,1):
-                                    replacement_suggestions = xor_replacement_suggestion(instruction)
-                                    targetMnemonic = "xor"
-                                else:
-                                    if random.randint(0,1):
-                                        replacement_suggestions = add_replacement_suggestion(instruction)
-                                        targetMnemonic = replacement_suggestions[2]
-                                    else:
-                                        replacement_suggestions = sub_replacement_suggestion(instruction)
-                                        targetMnemonic = replacement_suggestions[2]
-                            case "xor":
                                 replacement_suggestions = xor_replacement_suggestion(instruction)
-                                target_mnemonic = "xor"
-                            case "add":
-                                #If num is less than the target, then add, else subtract
-                                if random.randint(0,1):
-                                    replacement_suggestions = add_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
-                                else:
-                                    replacement_suggestions = sub_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
-                            case "sub":
-                                if random.randint(0,1):
-                                    replacement_suggestions = add_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
-                                else:
-                                    replacement_suggestions = sub_replacement_suggestion(instruction)
-                                    targetMnemonic = replacement_suggestions[2]
+                                targetMnemonic = "xor"
+                            #case "xor":
+                            #    replacement_suggestions = xor_replacement_suggestion(instruction)
+                            #    target_mnemonic = "xor"
+                            
+                        if replacement_suggestions==[-1,-1,-1]:
+                            continue
                         if replacement_suggestions[1]=="0x00000000":
                             continue
                         instructions[i] = replacement_suggestions[0]
@@ -251,8 +230,12 @@ def logic_replacement(self, instructions:list) -> list:
                             insert_index = i+1
 
                         self.insertWithCare(instructions, f"{targetMnemonic} {register}, {replacement_suggestions[1]}", insert_index, False)
+                        #if 'xor' not in targetMnemonic.lower():
                         random_adds+=1
     
+
+                add_to_int_list(no_more_updates, len(no_more_updates), i)
+                add_to_int_list(no_more_updates, len(no_more_updates), insert_index)
     #now if it doesn't have a bad character, but there is still a mov
 
     return instructions

@@ -124,6 +124,12 @@ def realtime_update(self, func): #I didn't know you could do this
         return returnable
     return wrapper
 
+def add_to_int_list(lst:list[int], new_ind:int, new_item:int):
+    for i, item in enumerate(lst):
+        if new_item<=item:
+            lst[i]+=1
+    lst.insert(new_ind, new_item)
+
 #Returns an index of the first use
 #@debughook
 def find_first_register_use(instructions:list, register:str, startIndex = None) -> int:
@@ -239,9 +245,12 @@ def contains_bad_chars(byteArray:str) -> bool:
     return False
 
 def beautify_hex(hex_original:str, arch:int) -> str:
+    #print(hex_original)
     num_digits = len(hex_original)-2
-    for i in range(int(arch/4-num_digits)):
-        hex_original = hex_original[:2] + '0' + hex_original[2:]
+    x_loc = hex_original.find('x')
+    #print(x_loc)
+    for i in range(arch//4-num_digits):
+        hex_original = hex_original[:x_loc+1] + '0' + hex_original[x_loc+1:]
     return hex_original
 
 def unbeautify_hex(hex_original:str) -> str: # 
@@ -305,6 +314,7 @@ def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
     product = ""
     verified_no_xor:bool = False
     original = beautify_hex(original, arch) #Have an exception handler in here
+    #beautify_hex breaks
     while not(verified_no_xor): #verify the product has no badchars:
         #print("WHILE CALL")
         #verify that if added with the original, it will not go above int("0x"+"f"*arch/4, 16)
@@ -313,12 +323,25 @@ def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
         #print(int(hex1,16)>=int(original,16))
         #print(len(hex1)!=arch/4+2)
         #breakpoint()
+        #Breaks when 0xffffffff, breaks when 
         if int(hex1,16)<=int(original,16) or len(hex1)!=arch/4+2: #True False
-            #print("Add branch 1")
+            print(hex1)
+            print(original)
+            print(int(hex1,16))
+            print(int(original,16))
+            print(int(hex1,16)<=int(original,16))
+            print(len(hex1))
+            print(arch/4+2)
+            print(len(hex1)!=arch/4+2)
+            print("Add branch 1")
             continue
         product = beautify_hex(hex(int(original[2:], 16)-int(hex1[2:], 16)), arch)
+
+       # print(hex1)
+       # print(product)
+
         if (int(hex1,16)+int(product, 16)>=int("0x"+"f"*int(arch/4), 16)):
-            #print("Add branch 2")
+            print("Add branch 2")
             continue
         if not contains_bad_chars(product) and len(product)==len(hex1):
             verified_no_xor = True
@@ -335,12 +358,17 @@ def random_hex_sub_pair(original:str, arch:int) -> list: #reverse it too
     while not(verified_no_xor): #verify the product has no badchars:
         hex1 = beautify_hex(random_hex(arch), arch)
         if int(hex1,16)<=int(original,16) or len(hex1)!=arch/4+2:
+            print("Sub branch 1")
+            print(hex1)
+            print(original)
             continue
         product = beautify_hex(hex(int(hex1[2:], 16)-int(original[2:], 16)), arch)
         if (int(hex1,16)-int(product, 16)<0):
+            print("Sub branch 2")
             continue
         if not contains_bad_chars(product) and len(product)==len(hex1):
             return [hex1, product]
+    print("Returning bad")
     return [original, "0x00000000"]
 
 def random_hex_xor_string(arch:int) -> None: #reverse it too
@@ -587,16 +615,20 @@ class Shellcode:
 
     def registers_in_subroutine(self, instructions):
         found_routine_inds = []
+        #print(self.jump_split_by_index)
         for ind, sub_start in enumerate(self.jump_split_by_index[:-1]):
             found_registers = []
-            for reg in REGISTERS:
+            for reg_ind, reg in enumerate(REGISTERS):
                 reg_found = False
                 for subreg in registerClassMain(reg):
                     for instruction in instructions[sub_start:self.jump_split_by_index[ind+1]]: 
                         if subreg in instruction:
                             reg_found = True
                 if reg_found:
-                    found_registers.append(REGISTERS_64[ind] if self.is_64 else REGISTERS[ind])
+                    #print(REGISTERS)
+                    #print(ind)
+                    #print(sub_start)
+                    found_registers.append(REGISTERS_64[reg_ind] if self.is_64 else REGISTERS[reg_ind])
             if len(found_registers)==4:
                 found_routine_inds.append([sub_start, self.jump_split_by_index[ind+1]])
         return found_routine_inds
@@ -791,13 +823,13 @@ class Shellcode:
 
     @staticmethod
     def assemble_to_target(instructions, start_ind, end_bytes, is_64:bool) -> int:
-        print(end_bytes)
+        #print(end_bytes)
         length = 0
         index = 0
         for i, instruction in enumerate(instructions[start_ind:], start=start_ind):
-            print(instruction)
+            #print(instruction)
             #print(length)
-            print(hex(length))
+            #print(hex(length))
             length += len(Shellcode.assemble64([instruction]) if is_64 else Shellcode.assemble([instruction]))
             if length==end_bytes:
                 index = i
@@ -821,10 +853,15 @@ class Shellcode:
         return instructions
 
     def findJump(self, instructions:list) -> list: #for some reason it is duping instructions, jle is counted as jl
+        #print(f"Instructions length: {len(instructions)}")
+        #print(f"Instructions length: {len(Shellcode.assemble(instructions))}")
         returnable = []
+        counter = 0
         for i, instruction in enumerate(instructions):
             for jumpInstruction in jumpInstructions:
                 if(loc :=(instruction.find(jumpInstruction))==0) and instruction[instruction.find(jumpInstruction)+len(jumpInstruction)]==" ":# and instruction[loc+len(jumpInstruction)]==" ":
+                    counter+=1
+                    #print(instruction)
 
                     if len(instruction.split(" ")[1])>=3:
                         if instruction.split(" ")[1][0:3]=="-0x" and self.is_jump_in_sc_abs(i, instructions):
@@ -832,6 +869,7 @@ class Shellcode:
                         elif instruction.split(" ")[1][0:2]=="0x" and self.is_jump_in_sc_abs(i, instructions):
                             returnable.append(i)
         self.jumpIndexes = returnable
+        #print(f"Jump Count: {counter}") #Should be 5 call + 37 j
         return returnable
     
     def findJumpTargets(self, code:bytes) -> list:
@@ -919,10 +957,14 @@ class Shellcode:
     
     #@debughook_verbose
     #Note to self, next time there is a jump target error, checl here
+    #Breaks with meterpreter/reverse_https
     def findJumpTargetsRelative(self, instructions:list) -> list: 
         indexArray = []
         targetIndexArray = []
-        for i in self.jumpIndexes:  #USE self.jumpIndexes
+        #print(f"JumpIndexes Length: {len(self.jumpIndexes)}")
+        for ind, i in enumerate(self.jumpIndexes):  #USE self.jumpIndexes
+            #print(instructions[i])
+            #print(i)
             offset = int(instructions[i].split(" ")[1],16)
             compareToOffset = 0x0
             if offset>=0:
@@ -933,6 +975,7 @@ class Shellcode:
                         #Make sure it's not 1 index off
                         debugJumpTargets.append(i)
                         targetIndexArray.append(j)
+                        #print(f"Added Target index after: {j}")
                         break
                     if self.is_64:
                         compareToOffset += int(hex(len(Shellcode.assemble64([instructions[j]]))), 16)
@@ -949,8 +992,11 @@ class Shellcode:
                     if compareToOffset<=offset:
                         debugJumpTargets.append(i)
                         targetIndexArray.append(j)
+                        #print(f"Added Target index before: {j}")
                         break
         self.jumpTargets = targetIndexArray
+        if len(self.jumpTargets)!=len(self.jumpIndexes):
+            raise ValueError("Unequal number of jumps and targets")
         return targetIndexArray
     
     def getRelativeJmpOffset(self, instructions:list, jumpIndies) -> None:
@@ -1113,6 +1159,12 @@ class Shellcode:
         for i in range(len(self.jumpIndexes)):
 
             self.jumpAddition.append([])
+            #print(i)
+            #print(self.jumpIndexes)
+            #print(self.jumpTargets)
+
+            #print(len(self.jumpIndexes))
+            #print(len(self.jumpTargets))
             if index<self.jumpIndexes[i] and absolute:
                 if self.is_64:
                     potentialAdd = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +str(hex(int(instructions[self.jumpIndexes[i]].split(" ")[1],16)+len(Shellcode.assemble64([toAdd]))))#Since it is not relative, I gotta do this
@@ -1253,13 +1305,24 @@ class Shellcode:
     @staticmethod
     def disassemble(string:str) -> list:
         disas = Cs(CS_ARCH_X86, CS_MODE_32)
+        string_temp = string
+        instruction_ind = 0
+        bytes_loc = 0x0
         instructions = []
-        for i in disas.disasm(string, 0x1000):
+        #print(disas.disasm(string_temp, 0x1000))
+        for i in disas.disasm(string_temp, 0x1000):#Update to be compatible with larger shellcodes
             instructions.append(f"{i.mnemonic} {i.op_str}")
+            bytes_loc+=i.size
+            #print(f"{i.mnemonic} {i.op_str}")
+            if instruction_ind>249:
+                string_temp = string_temp[bytes_loc:] #does not loop yet
+                raise ValueError("Instruction length too long")
+
+
         return instructions
 
     @staticmethod
-    def disassemble_loop(string:str, index) -> list:
+    def disassemble_loop(string:str, index) -> list: #This also has to be updated
         disas = Cs(CS_ARCH_X86, CS_MODE_32)
         instructions = []
         byteLocs = b''
@@ -1284,13 +1347,20 @@ class Shellcode:
     def disassemble64(code:str) -> list:
         md = Cs(CS_ARCH_X86, CS_MODE_64)
         instructions = []
+        instruction_ind = 0
+        bytes_loc=0
         for i in md.disasm(code, 0x1000):
             try:
                 instructions.append(i.mnemonic+" " + i.op_str)
+                instruction_ind +=1
+                bytes_loc+=int(i.size)
             except:
                 print("\x1b[31m\nError disassembling instruction:") #lodsb is breaking it
                 print(instruction)
                 exit()
+            if instruction_ind>249:
+                string_temp = string_temp[bytes_loc:] #does not loop yet
+                raise ValueError("Instruction length too long")
         return instructions
 
     @staticmethod

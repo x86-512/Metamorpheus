@@ -28,9 +28,13 @@ def insert_garbage(self, instructions) -> int:
     #self.insertWithCare(instructions, "nop", jump_target, False)#If it fails, re-enable this
     #jump_target = 19
     #jump_index = 18
+    #print(jump_index)
+    #print(jump_target)
+
+    #print(instructions[jump_index])
+    #print(instructions[jump_target])
     self.add_jump(instructions, jump_index, jump_target) #Get the index by assemble to the end
     #print(jump_target)
-    #print(instructions[jump_index])
     garb_bytes:bytes = generate_random_bytes(num_bytes)
 
     #print(instructions[jump_target-1])
@@ -39,7 +43,7 @@ def insert_garbage(self, instructions) -> int:
     #print(f"Jump Index: {jump_index}")
     #print(garb_bytes)
     #print(len(garb_bytes))
-    self.set_jump(instructions, jump_index, len(garb_bytes))
+    self.set_jump(instructions, jump_index, len(garb_bytes)) #Sometimes off by 1
 
     #self.dec_jump(instructions, jump_index)
     if self.is_64:

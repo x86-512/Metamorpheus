@@ -33,7 +33,7 @@ def findBetweenEach(string:str, phrase:str) -> list:
 
 
 #Remember to come here if you get an assembly error
-def loadShellcodeFromFile(fileName:str) -> Shellcode:
+def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     #Line 1 is marked by arch: either 32 or 64
     #actual_code = b""
     actual_code = ""
@@ -44,6 +44,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode:
         with open(fileName, 'r') as ShellcodeFile:
             for line in ShellcodeFile.readlines():#[codeBeginsLine:]:
                 actual_code += findBetweenEach(line, '"')[0].replace('"', "")
+                #print(actual_code)
             arch = int(actual_code.split("\n")[0])
             if(arch==64):
                 is64 = True
@@ -71,11 +72,14 @@ def main() -> None:
         verbose = True
 
     code:Shellcode = loadShellcodeFromFile("shellcode.txt")
+    #print(f"Code: {code.getCode()}")
     if code.is_64_bit():
         instructions = Shellcode.disassemble64(code.getCode())
     else:
-        instructions = Shellcode.disassemble(code.getCode())
+        instructions = Shellcode.disassemble(code.getCode()) 
 
+    #print(instructions)
+    #print(f"Code: {code.getCode()}")
     if args_present:
         if(not verify_args()):
             print_help()
@@ -88,18 +92,21 @@ def main() -> None:
             instructions = Shellcode.disassemble(code.getCode())
 
         instructions = Shellcode.fixBadMnemonics(instructions)
-        instructions = code.fixJumpErrors(instructions, code.getCode()) #Update to fix loop instructions
+        instructions = code.fixJumpErrors(instructions, code.getCode())  #Remember positive loops
+        #print(instructions)
 
         #Add a verbose option
         if verbose:
             print(f"\nOriginal Instructions: \n{instructions}")
 
         jumpIndexesOffset = code.findJump(instructions) 
-        code.getRelativeJmpOffset(instructions, jumpIndexesOffset) # Breaks the loop
+        code.getRelativeJmpOffset(instructions, jumpIndexesOffset) 
 
         code.findJumpTargetsRelative(instructions)
         updatedInstr = instructions 
 
+        #print(len(code.jumpIndexes))
+        #print(len(code.jumpTargets))
         code.get_subroutines(updatedInstr)
         if "d" in sys.argv[1]:
             updatedInstr = code.addDeadCode(instructions)
@@ -144,6 +151,8 @@ def main() -> None:
         #    updatedInstr = code.registerSwap(updatedInstr)
 
         if 'g' in sys.argv[1]:
+            #print(len(code.jumpIndexes))
+            #print(len(code.jumpTargets))
             code.insert_garbage(updatedInstr)
         else:
             if code.is_64_bit():
