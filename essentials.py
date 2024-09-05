@@ -1310,6 +1310,8 @@ class Shellcode:
         bytes_loc = 0x0
         instructions = []
         #print(disas.disasm(string_temp, 0x1000))
+        
+        #for i in range len(string_temp)//250+1:
         for i in disas.disasm(string_temp, 0x1000):#Update to be compatible with larger shellcodes
             instructions.append(f"{i.mnemonic} {i.op_str}")
             bytes_loc+=i.size
@@ -1317,6 +1319,7 @@ class Shellcode:
             if instruction_ind>249:
                 string_temp = string_temp[bytes_loc:] #does not loop yet
                 raise ValueError("Instruction length too long")
+        #string_temp = string_temp[bytes_loc:]
 
 
         return instructions
