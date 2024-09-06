@@ -8,8 +8,9 @@ Polymorpheus is designed to work in a R-E memory region, so you can place obfusc
 Feature List:
 | Feature | Description |
 | --- | --- |
-| Useless Instructions | Adds useless instructions that have no impact on how the shellcode is run |
-| Garbage Bytes | Adds random bytes to shift the disassembler's perceieved instruction locations |
-| Logic Replacement | Changes constants in the program for mov instructions |
+| Useless Instructions | Adds useless instructions that have no impact on how the shellcode is run. |
+| Garbage Bytes | Adds random bytes to shift the disassembler's perceieved instruction locations. |
+| Logic Replacement | Changes constants in the program for mov instructions. |
+| Long Sleep | Adds a loop before the shellcode. Includes random, useless instruction sets inside a long loop to cause the shellcode to sleep. Evades some dynamic detection mechanisms. |
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
