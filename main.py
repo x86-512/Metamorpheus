@@ -2,6 +2,7 @@ from modules.register_swap import *
 from modules.dead_code import *
 from modules.logic_swap import *
 from modules.garbage_jump import *
+from modules.long_sleep import *
 from essentials import * #All the modules import from the main file's directory automatically, so there is no need to place this in modules
 #from encryption import * # Work in progress
 
@@ -17,7 +18,9 @@ def print_help():
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
+    print("-l: Long sleep")
     print("-v: Verbose mode")
+    print("\nExample: python3 main.py -rdgl -v\n")
     print("Shellcode.txt syntax:\nArch(32 or 64)\nShellcode here, with or without \"")
 
 
@@ -55,7 +58,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 'g', 'v']
+    valid_flags:list[str] = ['d', 'r', 'g', 'v', 'l']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
@@ -108,8 +111,11 @@ def main() -> None:
         #print(len(code.jumpIndexes))
         #print(len(code.jumpTargets))
         code.get_subroutines(updatedInstr)
+
+        if "l" in sys.argv[1]:
+            updatedInstr = code.long_sleep(updatedInstr)
         if "d" in sys.argv[1]:
-            updatedInstr = code.addDeadCode(instructions)
+            updatedInstr = code.addDeadCode(updatedInstr)
         #print(updatedInstr)
         #print("\n"*10)
         if "r" in sys.argv[1]:

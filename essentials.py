@@ -14,6 +14,7 @@ badChars = ["00","04","05","09","0A","0a","20"]
 floating_point = ["fldpi", "fldl2e"]
 
 x86_32_registers = ["eax", "ecx", "edx", "ebx"]
+full_x86_regs = ["eax", "ecx", "edx", "ebx", "edi", "esi"]
 
 print_s = lambda code,msg : print(f"\x1b[{code}m{msg}\x1b[0m")
 
@@ -751,7 +752,7 @@ class Shellcode:
     
     #@debughook_verbose
     #Keystone is subtracting 2 from the jump when assembling
-    def add_jump(self, instructions, new_index, new_target_ind): #Eventually, when stated, it will append the target if it matches the new index
+    def add_jump(self, instructions, new_index, new_target_ind, variant:str = "jmp", add_jump_index:bool = True): #Eventually, when stated, it will append the target if it matches the new index
         #print(new_target_ind)
         #print(instructions[new_target_ind])
         #go through jump indexes, if it is more that a certain index, insert before just to keep it in order
@@ -770,12 +771,12 @@ class Shellcode:
         instruction_count = 0
         if(new_index<new_target_ind):
             if self.is_64:
-                add_to_jump=len(Shellcode.assemble64([f"jmp {hex(add_to_jump)}"]))
+                add_to_jump=len(Shellcode.assemble64([f"{variant} {hex(add_to_jump)}"]))
                 for i, instruction in enumerate(instructions[new_index:new_target_ind]):
                     add_to_jump+=len(Shellcode.assemble64([instruction]))
                     instruction_count+=1
             else:
-                add_to_jump=len(Shellcode.assemble([f"jmp {hex(add_to_jump)}"]))
+                add_to_jump=len(Shellcode.assemble([f"{variant} {hex(add_to_jump)}"]))
                 for i, instruction in enumerate(instructions[new_index:new_target_ind]):
                     add_to_jump+=len(Shellcode.assemble([instruction]))
                     instruction_count+=1
@@ -792,19 +793,21 @@ class Shellcode:
 
         #If the index is a jump target, update the length to skip the jump
         b4 = len(self.jumpTargets)
-        self.insertWithCare(instructions, f"jmp {hex(add_to_jump)}", new_index, False, True) #This screws it up, add option to not add it
+        #print(instructions)
+        #print(f"New Index: {new_index}")
+        self.insertWithCare(instructions, f"{variant} {hex(add_to_jump)}", new_index, False, True, True, False) #This screws it up, add option to not add it
         for ind_in_targets, target in enumerate(self.jumpTargets):
             if(new_index==target):
                 if self.is_64:
                     if int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)<0:
-                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble64([f"jmp {hex(add_to_jump)}"])))
+                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble64([f"{variant} {hex(add_to_jump)}"])))
                     else:
-                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble64([f"jmp {hex(add_to_jump)}"])))
+                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble64([f"{variant} {hex(add_to_jump)}"])))
                 else:
                     if int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)<0:
-                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble([f"jmp {hex(add_to_jump)}"])))
+                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble([f"{variant} {hex(add_to_jump)}"])))
                     else:
-                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble([f"jmp {hex(add_to_jump)}"])))
+                        instructions[self.jumpIndexes[ind_in_targets]] = instructions[self.jumpIndexes[ind_in_targets]].split(" ")[0]+ " " +hex(int(instructions[self.jumpIndexes[ind_in_targets]].split(" ")[1],16)+len(Shellcode.assemble([f"{variant} {hex(add_to_jump)}"])))
         #print(instructions)
         
     #   FIX THE INSERT WITH CARE THING, IT IS THROWING THE LOOP OFF!!!
@@ -1146,7 +1149,7 @@ class Shellcode:
                 self.jump_split_by_offset[routine_point]+=added_bytes
 
     #@debughook_verbose
-    def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
+    def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None, shift_jump = True) -> None:
         if shift_target is None:
             shift_target = False
         if include_if_eq is None:
@@ -1161,7 +1164,9 @@ class Shellcode:
             self.jumpAddition.append([])
             #print(i)
             #print(self.jumpIndexes)
+            #print(self.jumpIndexes[0])
             #print(self.jumpTargets)
+            #print(self.jumpTargets[0])
 
             #print(len(self.jumpIndexes))
             #print(len(self.jumpTargets))
@@ -1223,7 +1228,11 @@ class Shellcode:
             elif index>self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<index<=jump
                 if self.is_64:
                     self.jumpAddition[i].append(len(Shellcode.assemble64([toAdd])))
-                    self.jumpIndexes[i]+=1
+                    if index==self.jumpIndexes[i] and not shift_jump:
+                        pass
+                    else:
+                        self.jumpIndexes[i]+=1
+
                     shellcode = Shellcode.assemble64(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble64([instructions[self.jumpIndexes[i]]]))
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-int(len(Shellcode.assemble64([toAdd])))
@@ -1231,9 +1240,17 @@ class Shellcode:
                     addedTypes.append("Between Backwards")
                 else:
                     self.jumpAddition[i].append(len(Shellcode.assemble([toAdd])))
-                    self.jumpIndexes[i]+=1
+                    if index==self.jumpIndexes[i] and not shift_jump:
+                        pass
+                    else:
+                        self.jumpIndexes[i]+=1
                     shellcode = Shellcode.assemble(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble([instructions[self.jumpIndexes[i]]]))
+                    #print(machineCodeJump)
+                    #print(self.jumpIndexes[i])
+                    #print(instructions[self.jumpIndexes[i]-1])
+                    #print(self.jumpTargets[i])
+                    #print(instructions)
                     india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-int(len(Shellcode.assemble([toAdd])))
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
@@ -1310,8 +1327,6 @@ class Shellcode:
         bytes_loc = 0x0
         instructions = []
         #print(disas.disasm(string_temp, 0x1000))
-        
-        #for i in range len(string_temp)//250+1:
         for i in disas.disasm(string_temp, 0x1000):#Update to be compatible with larger shellcodes
             instructions.append(f"{i.mnemonic} {i.op_str}")
             bytes_loc+=i.size
@@ -1319,7 +1334,6 @@ class Shellcode:
             if instruction_ind>249:
                 string_temp = string_temp[bytes_loc:] #does not loop yet
                 raise ValueError("Instruction length too long")
-        #string_temp = string_temp[bytes_loc:]
 
 
         return instructions
