@@ -1,7 +1,7 @@
 # Polymorpheus
 __This project is undergoing rewrite to reduce overcomplexity and to simplify the process of adding new features__
 
-Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. For now, I have focused on adding static detection evasion mechanisms, but I might add dynamic detection evasion soon as well.
+Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing basic dynamic detection. Currently, this project only processes up to 250 instructions, so large shellcodes will not work.
 
 Polymorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
@@ -9,7 +9,7 @@ Polymorpheus is designed to work in a R-E memory region, so you can place obfusc
 | Feature | Description |
 | --- | --- |
 | Useless Instructions | Adds useless instructions that have no impact on how the shellcode is run. |
-| Garbage Bytes | Adds random bytes to shift the disassembler's perceieved instruction locations. |
+| Garbage Bytes | Adds random bytes to shift the disassembler's perceived instruction locations. |
 | Logic Replacement | Changes constants in the program for mov instructions. |
 | Long Sleep | Adds a long loop before the shellcode executes. Evades some dynamic detection mechanisms. |
 
