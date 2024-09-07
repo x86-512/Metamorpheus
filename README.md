@@ -14,3 +14,12 @@ Feature List:
 | Long Sleep | Adds a long loop before the shellcode executes. Evades some dynamic detection mechanisms. |
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
+
+Requirements:
+- Python: At least 3.10
+- Pip: At least 22.0.0
+- [Library] keystone-engine: At least 0.9.0
+- [Library] capstone: At least 5.0.0
+
+Install requirements:
+Open a terminal in the polymorpheus directory and type: `pip install -r requirements.txt`
