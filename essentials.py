@@ -999,6 +999,8 @@ class Shellcode:
                         break
         self.jumpTargets = targetIndexArray
         if len(self.jumpTargets)!=len(self.jumpIndexes):
+            print(self.jumpIndexes)
+            print(self.jumpTargets)
             raise ValueError("Unequal number of jumps and targets")
         return targetIndexArray
     
@@ -1338,15 +1340,17 @@ class Shellcode:
         bytes_loc = 0x0
         instructions = []
         #print(disas.disasm(string_temp, 0x1000))
+        #for i in range(0, +1): #get i.Instruction Count
         for i in disas.disasm(string_temp, 0x1000):#Update to be compatible with larger shellcodes
             instructions.append(f"{i.mnemonic} {i.op_str}")
+            instruction_ind += 1
             bytes_loc+=i.size
             #print(f"{i.mnemonic} {i.op_str}")
-            if instruction_ind>249:
-                string_temp = string_temp[bytes_loc:] #does not loop yet
-                raise ValueError("Instruction length too long")
-
-
+            #if instruction_ind>249:
+            #    string_temp = string_temp[bytes_loc:] #does not loop yet
+            #    raise ValueError("Instruction length too long")
+        if bytes_loc!=len(string_temp):
+            raise ValueError(f"\x1b[31mCapstone could not disassemble all instructions. There is likely a bad instruction in your shellcode near offset: {hex(bytes_loc)}.\x1b[0m")
         return instructions
 
     @staticmethod
@@ -1374,6 +1378,7 @@ class Shellcode:
     @staticmethod
     def disassemble64(code:str) -> list:
         md = Cs(CS_ARCH_X86, CS_MODE_64)
+        string_temp = code
         instructions = []
         instruction_ind = 0
         bytes_loc=0
@@ -1386,9 +1391,11 @@ class Shellcode:
                 print("\x1b[31m\nError disassembling instruction:") #lodsb is breaking it
                 print(instruction)
                 exit()
-            if instruction_ind>249:
-                string_temp = string_temp[bytes_loc:] #does not loop yet
-                raise ValueError("Instruction length too long")
+        #    if instruction_ind>249:
+        #        string_temp = string_temp[bytes_loc:] #does not loop yet
+        #        raise ValueError("Instruction length too long")
+        if bytes_loc!=len(string_temp):
+            raise ValueError(f"\x1b[31mCapstone could not disassemble all instructions. There is likely a bad instruction in your shellcode near offset: {hex(bytes_loc)}.\x1b[0m")
         return instructions
 
     @staticmethod
