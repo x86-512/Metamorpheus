@@ -5,7 +5,7 @@ Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade sig
 
 Polymorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
-# Feature List:
+# Features
 | Feature | Description |
 | --- | --- |
 | Useless Instructions | Adds useless instructions that have no impact on how the shellcode is run. |
@@ -15,7 +15,7 @@ Polymorpheus is designed to work in a R-E memory region, so you can place obfusc
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
 
-# Requirements:
+# Dependencies
 - Python: At least 3.10
 - Pip: At least 22.0.0
 - [Library] keystone-engine: At least 0.9.0
