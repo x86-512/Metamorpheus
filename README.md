@@ -21,5 +21,6 @@ Requirements:
 - [Library] keystone-engine: At least 0.9.0
 - [Library] capstone: At least 5.0.0
 
-Install requirements:
+Install library dependencies:
+
 Open a terminal in the polymorpheus directory and type: `pip install -r requirements.txt`
