@@ -1,7 +1,7 @@
 # Polymorpheus
 __This project is undergoing rewrite to reduce overcomplexity and to simplify the process of adding new features__
 
-Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing basic dynamic detection. If you are having a disassembly error with your shellcode, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
+Polymorpheus is a polymorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing basic dynamic detection. If you are having a disassembly error, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
 
 Polymorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
