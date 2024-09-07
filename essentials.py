@@ -752,7 +752,7 @@ class Shellcode:
     
     #@debughook_verbose
     #Keystone is subtracting 2 from the jump when assembling
-    def add_jump(self, instructions, new_index, new_target_ind, variant:str = "jmp", add_jump_index:bool = True): #Eventually, when stated, it will append the target if it matches the new index
+    def add_jump(self, instructions, new_index, new_target_ind, variant:str = "jmp", shift_jump:bool = True): #Eventually, when stated, it will append the target if it matches the new index
         #print(new_target_ind)
         #print(instructions[new_target_ind])
         #go through jump indexes, if it is more that a certain index, insert before just to keep it in order
@@ -795,7 +795,7 @@ class Shellcode:
         b4 = len(self.jumpTargets)
         #print(instructions)
         #print(f"New Index: {new_index}")
-        self.insertWithCare(instructions, f"{variant} {hex(add_to_jump)}", new_index, False, True, True, False) #This screws it up, add option to not add it
+        self.insertWithCare(instructions, f"{variant} {hex(add_to_jump)}", new_index, False, True, True, shift_jump) #This screws it up, add option to not add it
         for ind_in_targets, target in enumerate(self.jumpTargets):
             if(new_index==target):
                 if self.is_64:
@@ -1228,10 +1228,10 @@ class Shellcode:
             elif index>self.jumpTargets[i] and index<=self.jumpIndexes[i]:#if target<index<=jump
                 if self.is_64:
                     self.jumpAddition[i].append(len(Shellcode.assemble64([toAdd])))
-                    if index==self.jumpIndexes[i] and not shift_jump:
-                        pass
-                    else:
-                        self.jumpIndexes[i]+=1
+                    #if index==self.jumpIndexes[i] and not shift_jump:
+                    #    pass
+                    #else:
+                    self.jumpIndexes[i]+=1
 
                     shellcode = Shellcode.assemble64(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble64([instructions[self.jumpIndexes[i]]]))
@@ -1240,10 +1240,11 @@ class Shellcode:
                     addedTypes.append("Between Backwards")
                 else:
                     self.jumpAddition[i].append(len(Shellcode.assemble([toAdd])))
-                    if index==self.jumpIndexes[i] and not shift_jump:
-                        pass
-                    else:
-                        self.jumpIndexes[i]+=1
+                    #if index==self.jumpIndexes[i] and not shift_jump:
+                    #    pass
+                    #else:
+                    self.jumpIndexes[i]+=1
+                    #print(self.jumpIndexes)
                     shellcode = Shellcode.assemble(instructions)
                     machineCodeJump = shellcode.index(Shellcode.assemble([instructions[self.jumpIndexes[i]]]))
                     #print(machineCodeJump)
@@ -1251,7 +1252,17 @@ class Shellcode:
                     #print(instructions[self.jumpIndexes[i]-1])
                     #print(self.jumpTargets[i])
                     #print(instructions)
-                    india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-int(len(Shellcode.assemble([toAdd])))
+                    try:
+                        india = machineCodeJump+int(instructions[self.jumpIndexes[i]].split(" ")[1], 16)-int(len(Shellcode.assemble([toAdd])))
+                    except:
+                        #print(instructions)
+                        #print(self.jumpIndexes)
+                        #for x in self.jumpIndexes:
+                        #    print(instructions[x]) 
+                        #print(self.jumpTargets)
+                        print("JumpInstructions not pointing to all jump instructions")
+                        breakpoint()
+                        exit()
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
             elif index==self.jumpTargets[i] and index<=self.jumpIndexes[i] and not include_if_eq:#if target<=index<jump
@@ -1384,12 +1395,13 @@ class Shellcode:
     def assemble(instructions:list) -> str:
         assembler = Ks(KS_ARCH_X86, KS_MODE_32)
         returnable = b""
-        for instruction in instructions:
+        for ind, instruction in enumerate(instructions):
             try:
                 machineCode, _ = assembler.asm(instruction)
             except:
                 print("\x1b[31m\nError assembling instruction:") #lodsb is breaking it
                 print(instruction)
+                print(ind)
                 breakpoint()
                 exit()
             for byte in machineCode:
