@@ -157,8 +157,6 @@ def main() -> None:
         #    updatedInstr = code.registerSwap(updatedInstr)
 
         if 'g' in sys.argv[1]:
-            #print(len(code.jumpIndexes))
-            #print(len(code.jumpTargets))
             code.insert_garbage(updatedInstr)
         else:
             if code.is_64_bit():
@@ -172,8 +170,6 @@ def main() -> None:
                 pass
             if 'u' in sys.argv[2]:
                 unicomp.compile(64 if code.is_64 else 32,code.string)
-
-        #updatedInstr = code.encrypt(updatedInstr)
 
         #Verbose option here
         if verbose:
