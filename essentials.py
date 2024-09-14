@@ -236,6 +236,7 @@ def target_in_scope(instructions:list, start_ind:int) -> bool:
         target = instructions[start_ind].split(" ")[1]
         if target!="0x":
             return False
+        return True
     except IndexError:
         return False
 
@@ -269,10 +270,10 @@ def unbeautify_hex(hex_original:str) -> str: #
                     break
                 else:
                     exclusivity_index+=2
-
     except IndexError:
         print("Index Error from unbeautify_hex")
         return "0x"+hex_original[exclusivity_index:]
+    return ""
 
 #@debughook_verbose
 def random_hex(arch:int) -> str:
@@ -372,10 +373,10 @@ def random_hex_sub_pair(original:str, arch:int) -> list: #reverse it too
             continue
         if not contains_bad_chars(product) and len(product)==len(hex1):
             return [hex1, product]
-    print("Returning bad")
+    #print("Returning bad")
     return [original, "0x00000000"]
 
-def random_hex_xor_string(arch:int) -> None: #reverse it too
+def random_hex_xor_string(arch:int) -> str: #reverse it too
     good_xor = False
     while good_xor is False:
         hex1 = random_hex(arch)
@@ -595,11 +596,11 @@ class Shellcode:
     def is_64_bit(self):
         return self.is_64
 
-    @property
-    def assembled_instrs(self):
-        if self.is_64:
-            return Shellcode.assemble64(self.shellcode)
-        return Shellcode.assemble(self.shellcode)
+    #@property
+        #def assembled_instrs(self):
+        #if self.is_64:
+        #    return Shellcode.assemble64(self.shellcode)
+    #return Shellcode.assemble(self.shellcode)
 
     @property
     def length(self):
@@ -609,7 +610,7 @@ class Shellcode:
     def string(self):
         return bytesToString(self.shellcode)
 
-    def get_subroutines(self, instructions:list) -> [list, list]:
+    def get_subroutines(self, instructions:list):
         assembly_offset:int = 0
         self.jump_split_by_index:list[int] = []
         self.jump_split_by_offset:list[int] = []
@@ -692,17 +693,19 @@ class Shellcode:
     def offset_to_index(is_64:bool, instructions, offset):
         offset = 0x0
         returnable = 0
+        index=0
         for i, instr in instructions:
             if index==i:
                 returnable = i
                 break
             offset+=len(Shellcode.assemble64(instr) if is_64 else Shellcode.assemble(instr))
+            index+=1
         return offset
 
     #def check_jump_in_subroutine(self, subroutine_ind):
     #    self.jump_split_by_index.
 
-    def update_bounds_of_reg_swap(self, instructions:list[str], before:int,after:int = None) -> list[int]:
+    def update_bounds_of_reg_swap(self, instructions:list[str], before:int,after = None) -> list[int]:
         #Check if before is in a jump
         #If so, check after to make sure it is in the subroutine, if not make it somewhere in the same subroutine
         if after is None:
@@ -934,7 +937,7 @@ class Shellcode:
     def findJumpTargets(self, instructions:list) -> list: 
         indexArray = []
         targetIndexArray = []
-        jumpFounds = findJump(instructions)
+        jumpFounds = self.findJump(instructions)
         for i in jumpFounds: #i here is an element, int, which is a valid element of instructions
             offset = int(instructions[i].split(" ")[1],16)
             instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
@@ -1025,18 +1028,18 @@ class Shellcode:
         for i, jumpInd in enumerate(self.jumpIndexes):
             targetInd:int = self.jumpTargets[i]
             jump_addition:int = 0
-            if jumpTargets[i]<self.jumpIndexes[i]:
-                for i in instructions[jumpTargets[i]:jumpIndexes[i]+1]:
+            if self.jumpTargets[i]<self.jumpIndexes[i]:
+                for i in instructions[self.jumpTargets[i]:self.jumpIndexes[i]+1]:
                     if self.is_64:
-                        jump_addition -= len(Shellcode.assemble64(i))
+                        jump_addition -= len(Shellcode.assemble64([i]))
                     else:
-                        jump_addition -= len(Shellcode.assemble(i))
+                        jump_addition -= len(Shellcode.assemble([i]))
             else:
-                for i in instructions[jumpIndexes[i]+1:jumpTargets[i]]:
+                for i in instructions[self.jumpIndexes[i]+1:self.jumpTargets[i]]:
                     if self.is_64:
-                        jump_addition += len(Shellcode.assemble64(i))
+                        jump_addition += len(Shellcode.assemble64([i]))
                     else:
-                        jump_addition += len(Shellcode.assemble(i))
+                        jump_addition += len(Shellcode.assemble([i]))
             instructions = instructions[jumpInd].split(" ")[0] + " " + str(hex(jump_addition))
 
     def sort_jump_indexes(self) -> None:
@@ -1051,15 +1054,15 @@ class Shellcode:
             #If new_ind's <= a jump target or index, increment it by 1
             for i, (jump, target) in enumerate(zip(self.jumpIndexes, self.jumpTargets)):
                 if new_ind<=jump:
-                    jumpIndexes[i]+=1
+                    self.jumpIndexes[i]+=1
                 if new_ind<=target:
-                    jumpTargets[i]+=1
+                    self.jumpTargets[i]+=1
             self.sort_jump_indexes()
-            self.refresh_jumps()
+            self.refresh_jumps(instructions)
 
     #Meant to be used inside a decorator
     #@debughook_verbose
-    def insert_bytes(self, instructions:list[str], added_bytes:int, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
+    def insert_bytes(self, instructions:list[str], added_bytes:int, index:int, absolute:bool, shift_target = None, include_if_eq = None) -> None:
         if shift_target is None:
             shift_target = False
         if include_if_eq is None:
@@ -1214,9 +1217,9 @@ class Shellcode:
                         self.jumpTargets[j] += 1
                         instructions[self.jumpIndexes[j]] = instructions[self.jumpIndexes[j]].split(" ")[0] + " "+str(hex(int(instructions[self.jumpIndexes[j]].split(" ")[1], 16)))
                     if self.is_64:
-                        self.jumpAddition[i].append(len(Shellcode.assemble64(toAdd)))
+                        self.jumpAddition[i].append(len(Shellcode.assemble64([toAdd])))
                     else:
-                        self.jumpAddition[i].append(len(Shellcode.assemble(toAdd)))
+                        self.jumpAddition[i].append(len(Shellcode.assemble([toAdd])))
             elif index>self.jumpIndexes[i] and index<=self.jumpTargets[i]:#If jumpIndexes<index<jumpTargets, if inserting between
                 if self.is_64:
                     addedTypes.append("Between Before")
@@ -1381,7 +1384,7 @@ class Shellcode:
         return instructions
 
     @staticmethod
-    def disassemble_loop(string:str, index) -> list: #This also has to be updated
+    def disassemble_loop(string, index): #This also has to be updated
         disas = Cs(CS_ARCH_X86, CS_MODE_32)
         instructions = []
         byteLocs = b''
@@ -1392,7 +1395,7 @@ class Shellcode:
         return byteLocs
 
     @staticmethod
-    def disassemble_loop64(string:str, index) -> list:
+    def disassemble_loop64(string, index):
         disas = Cs(CS_ARCH_X86, CS_MODE_32)
         instructions = []
         byteLocs = b''
@@ -1403,7 +1406,7 @@ class Shellcode:
         return byteLocs
 
     @staticmethod
-    def disassemble64(code:str) -> list:
+    def disassemble64(code) -> list:
         md = Cs(CS_ARCH_X86, CS_MODE_64)
         string_temp = code
         instructions = []
@@ -1426,7 +1429,7 @@ class Shellcode:
         return instructions
 
     @staticmethod
-    def assemble(instructions:list, arch=KS_ARCH_X86, mode=KS_MODE_32) -> bytes:
+    def assemble(instructions:list, arch=KS_ARCH_X86, mode=KS_MODE_32):
         assembler = Ks(arch, mode)
         returnable = b""
         for ind, instruction in enumerate(instructions):
@@ -1444,7 +1447,7 @@ class Shellcode:
 
 
     @staticmethod
-    def assemble64(instructions:list) -> str:
+    def assemble64(instructions:list):
         assembler = Ks(KS_ARCH_X86, KS_MODE_64)
         returnable = b""
         for instruction in instructions:
