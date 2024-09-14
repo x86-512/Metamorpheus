@@ -7,7 +7,7 @@ Polymorpheus is designed to work in a R-E memory region, so you can place obfusc
 
 # How to run
 1. Install Dependencies
-2. Make a file, `shellcode.txt` (case sensitive) with the architecture on the first line and the shellcode on the second line
+2. Make a file, `shellcode.txt` (case sensitive), with the architecture on the first line and the shellcode on the second line
 3. Run main.py by its correct syntax, `python3 main.py -(arguments)`
 
 # Features
