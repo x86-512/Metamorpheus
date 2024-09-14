@@ -16,7 +16,7 @@ def long_sleep(self, instructions:list[str]):
     self.insertWithCare(instructions, f"inc {counter_register}", 2, False)
     self.insertWithCare(instructions, f"cmp {counter_register}, {loop_count}", loop_jump_ind-1, False)
     loop_len = len(Shellcode.assemble64(instructions[loop_start_ind:loop_jump_ind]) if self.is_64 else Shellcode.assemble(instructions[loop_start_ind:loop_jump_ind]))#Everything up to loop jump ind
-    self.insertWithCare(instructions, f"jl -{'0x%02x'%(loop_len+2)}", loop_jump_ind, False)
+    self.insertWithCare(instructions, f"jl -{'0x%02x'%(loop_len)}", loop_jump_ind, False)
     self.jumpIndexes.insert(0, loop_jump_ind)
     self.jumpTargets.insert(0, loop_start_ind)
 

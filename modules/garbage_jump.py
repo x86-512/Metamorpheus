@@ -22,7 +22,9 @@ def generate_random_bytes(num_bytes:int) -> bytes:
 def insert_garbage(self, instructions) -> int:
     #print(f"Jump Indexes Before: {self.jumpIndexes}")
     shellcode_byte_locations = []
-    jump_target:int = randint(1,int((len(instructions)-1)))
+    if len(instructions)<5:
+        return 0
+    jump_target:int = randint(1,int((len(instructions)//2-1)))
     jump_index:int = jump_target - 1
     num_bytes:int = randint(2,26)
     #self.insertWithCare(instructions, "nop", jump_target, False)#If it fails, re-enable this
@@ -50,6 +52,9 @@ def insert_garbage(self, instructions) -> int:
         self.shellcode = Shellcode.assemble64(instructions)
         shellcode_byte_locations.append(self.shellcode.find(Shellcode.assemble64(instructions[jump_target:])))
     else:
+        #print(self.jumpIndexes)
+        #for ix in self.jumpIndexes:
+        #    print(instructions[ix])
         self.shellcode = Shellcode.assemble(instructions)
         shellcode_byte_locations.append(self.shellcode.find(Shellcode.assemble(instructions[jump_target:])))
 
