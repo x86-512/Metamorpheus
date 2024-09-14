@@ -1270,7 +1270,7 @@ class Shellcode:
                         #    print(instructions[x]) 
                         #print(self.jumpTargets)
                         print("JumpInstructions not pointing to all jump instructions")
-                        breakpoint()
+                        #breakpoint()
                         exit()
                     instructions[self.jumpIndexes[i]] = instructions[self.jumpIndexes[i]].split(" ")[0]+ " " +hex(-len(Shellcode.assemble(instructions[self.jumpTargets[i]:self.jumpIndexes[i]])))
                     addedTypes.append("Between Backwards")
@@ -1415,8 +1415,8 @@ class Shellcode:
                 instruction_ind +=1
                 bytes_loc+=int(i.size)
             except:
-                print("\x1b[31m\nError disassembling instruction:") #lodsb is breaking it
-                print(instruction)
+                print(f"\x1b[31m\nError disassembling instruction at offset: {hex(bytes_loc)}\x1b[0m") #lodsb is breaking it
+                #print(instruction)
                 exit()
         #    if instruction_ind>249:
         #        string_temp = string_temp[bytes_loc:] #does not loop yet
@@ -1433,10 +1433,10 @@ class Shellcode:
             try:
                 machineCode, _ = assembler.asm(instruction)
             except:
-                print("\x1b[31m\nError assembling instruction:") #lodsb is breaking it
+                print("\x1b[31m\nError assembling instruction:\x1b[0m") #lodsb is breaking it
                 print(instruction)
                 print(ind)
-                breakpoint()
+                #breakpoint()
                 exit()
             for byte in machineCode:
                 returnable += bytes.fromhex(format(byte,"02x"))
@@ -1451,7 +1451,7 @@ class Shellcode:
             try:
                 machineCode, _ = assembler.asm(instruction)
             except:
-                print("\x1b[31m\nError assembling 64-bit instruction:") #lodsb is breaking it
+                print("\x1b[31m\nError assembling 64-bit instruction:\x1b[0m") #lodsb is breaking it
                 print(instruction)
                 exit()
             for byte in machineCode:
