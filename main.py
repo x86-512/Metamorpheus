@@ -3,6 +3,7 @@ from modules.dead_code import *
 from modules.logic_swap import *
 from modules.garbage_jump import *
 from modules.long_sleep import *
+from modules.anti_debug import *
 from essentials import * #All the modules import from the main file's directory automatically, so there is no need to place this in modules
 #from encryption import * # Work in progress
 
@@ -10,6 +11,8 @@ import compilers.win as wincomp #Use xor to avoid bad chars
 import compilers.unix as unicomp #Use mmap to allocate better and use xor
 
 import sys
+
+from random import randint #Temporary
 
 def print_help():
     print("Syntax:")
@@ -19,6 +22,7 @@ def print_help():
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
     print("-l: Long sleep")
+    print("-a: Anti debugging features")
     print("-v: Verbose mode")
     print("\nExample: python3 main.py -rdgl -v\n")
     print("Shellcode.txt syntax:\nArch(32 or 64)\nShellcode here, with or without \"")
@@ -58,7 +62,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     return Shellcode(actual_code, is64)
     
 def verify_args():
-    valid_flags:list[str] = ['d', 'r', 'g', 'v', 'l']
+    valid_flags:list[str] = ['d', 'r', 'g', 'v', 'l', 'a']
     return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
 
 def main() -> None:
@@ -156,7 +160,11 @@ def main() -> None:
         #        exit()
         #    updatedInstr = code.registerSwap(updatedInstr)
 
+        if 'a' in sys.argv[1]:
+            updatedInstr = code.anti_trap(updatedInstr)
         if 'g' in sys.argv[1]:
+            #print(len(code.jumpIndexes))
+            #print(len(code.jumpTargets))
             code.insert_garbage(updatedInstr)
         else:
             if code.is_64_bit():
@@ -170,6 +178,8 @@ def main() -> None:
                 pass
             if 'u' in sys.argv[2]:
                 unicomp.compile(64 if code.is_64 else 32,code.string)
+
+        #updatedInstr = code.encrypt(updatedInstr)
 
         #Verbose option here
         if verbose:

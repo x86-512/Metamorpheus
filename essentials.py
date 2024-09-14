@@ -18,6 +18,9 @@ full_x86_regs = ["eax", "ecx", "edx", "ebx", "edi", "esi"]
 
 print_s = lambda code,msg : print(f"\x1b[{code}m{msg}\x1b[0m")
 
+def gen_random_register():
+    return full_x86_regs[random.randint(0, len(full_x86_regs)-1)]
+
 def bytesToString(byteArray:bytes) -> str:
     string = "".join("\\x{:02x}".format(b) for b in byteArray)
     return string
@@ -571,6 +574,9 @@ class Shellcode:
         self.takenRegisters:list = []
         self.is_64 = is_x64
         self.jumpAddition = []
+        self.instructions = []
+        self.arch = (CS_ARCH_X86, KS_ARCH_X86) #Preparing for a complete rewrite
+        self.mode = None #
 
     def __init__(self, shellcode:str, is_x64:bool):
         self.shellcode:bytes = removeExtraSlashBytes(shellcode)
@@ -581,6 +587,7 @@ class Shellcode:
         self.takenRegisters:list = []
         self.is_64:bool = is_x64
         self.jumpAddition = []
+        self.instructions = []
     
     def getCode(self):#Just in case it becomes private
         return self.shellcode
@@ -1333,8 +1340,28 @@ class Shellcode:
         return returnable
     
     @staticmethod
-    def disassemble(string:str) -> list:
-        disas = Cs(CS_ARCH_X86, CS_MODE_32)
+    def disassemble(string:str, arch=CS_ARCH_X86, mode=CS_MODE_32) -> list:
+        disas = Cs(arch, mode) #Preparing for rewrite
+        string_temp = string
+        instruction_ind = 0
+        bytes_loc = 0x0
+        instructions = []
+        #print(disas.disasm(string_temp, 0x1000))
+        #for i in range(0, +1): #get i.Instruction Count
+        for i in disas.disasm(string_temp, 0x1000):#Update to be compatible with larger shellcodes
+            instructions.append(f"{i.mnemonic} {i.op_str}")
+            instruction_ind += 1
+            bytes_loc+=i.size
+            #print(f"{i.mnemonic} {i.op_str}")
+            #if instruction_ind>249:
+            #    string_temp = string_temp[bytes_loc:] #does not loop yet
+            #    raise ValueError("Instruction length too long")
+        if bytes_loc!=len(string_temp):
+            raise ValueError(f"\x1b[31mCapstone could not disassemble all instructions. There is likely a bad instruction in your shellcode near offset: {hex(bytes_loc)}.\x1b[0m")
+        return instructions
+
+    def i_disasm(self, string:str):
+        disas = Cs(self.arch[0], self.mode) #Preparing for rewrite
         string_temp = string
         instruction_ind = 0
         bytes_loc = 0x0
@@ -1399,8 +1426,8 @@ class Shellcode:
         return instructions
 
     @staticmethod
-    def assemble(instructions:list) -> str:
-        assembler = Ks(KS_ARCH_X86, KS_MODE_32)
+    def assemble(instructions:list, arch=KS_ARCH_X86, mode=KS_MODE_32) -> bytes:
+        assembler = Ks(arch, mode)
         returnable = b""
         for ind, instruction in enumerate(instructions):
             try:
@@ -1430,6 +1457,13 @@ class Shellcode:
             for byte in machineCode:
                 returnable += bytes.fromhex(format(byte,"02x"))
         return returnable
+
+    #@staticmethod
+    #def assemble_arm(instructions:list[str]) -> str:
+    #    pass
+
+    #During rewrite, I will merge all of these into 1 function
+
 
 def findall(string:str, phrase:str) -> list:
     returnable = []
