@@ -5,6 +5,11 @@ Polymorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed 
 
 Polymorpheus is designed to work in a R-E memory region, so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
+# How to run
+1. Install Dependencies
+2. Make a file, `shellcode.txt` (case sensitive) with the architecture on the first line and the shellcode on the second line
+3. Run main.py by its correct syntax, `python3 main.py -(arguments)`
+
 # Features
 | Feature | Description |
 | --- | --- |
