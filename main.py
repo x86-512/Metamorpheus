@@ -183,7 +183,6 @@ def main() -> None:
             #    print(instructions[instruction])
             #breakpoint()
 
-            #code.jump_out_of_subroutine(updatedInstr, )
             #print(code.jump_split_by_index)
             #reg_swap_locs = code.update_bounds_of_reg_swap(updatedInstr, start_of_swap)
 

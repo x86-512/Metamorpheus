@@ -566,18 +566,6 @@ REGISTERS= ["eax", "ecx", "edx", "ebx"]#Add compatibility for storing more regis
 REGISTERS_64 = ["rax", "rcx", "rdx", "rbx"]#Add compatibility for storing more registers andreturn registers if needed for loop and ret instructions
 
 class Shellcode:
-    def __init__(self, shellcode:bytes, is_x64:bool):
-        self.shellcode:bytes = shellcode#Convert to string
-        self.jumpSnapshots:list = []
-        self.jumpIndexes:list = []
-        self.jumpTargets:list = []
-        self.takenRegisters:list = []
-        self.takenRegisters:list = []
-        self.is_64 = is_x64
-        self.jumpAddition = []
-        self.instructions = []
-        self.arch = (CS_ARCH_X86, KS_ARCH_X86) #Preparing for a complete rewrite
-        self.mode = None #
 
     def __init__(self, shellcode:str, is_x64:bool):
         self.shellcode:bytes = removeExtraSlashBytes(shellcode)
@@ -589,6 +577,10 @@ class Shellcode:
         self.is_64:bool = is_x64
         self.jumpAddition = []
         self.instructions = []
+
+        #These will be used after the rewrite
+        self.arch = (CS_ARCH_X86, KS_ARCH_X86)
+        self.mode = CS_MODE_64 if (self.arch[0]==CS_ARCH_X86 and self.is_64) else CS_MODE_32 if (self.arch[0]==CS_ARCH_X86 and not self.is_64) else None
     
     def getCode(self):#Just in case it becomes private
         return self.shellcode
@@ -596,11 +588,6 @@ class Shellcode:
     def is_64_bit(self):
         return self.is_64
 
-    #@property
-        #def assembled_instrs(self):
-        #if self.is_64:
-        #    return Shellcode.assemble64(self.shellcode)
-    #return Shellcode.assemble(self.shellcode)
 
     @property
     def length(self):
@@ -642,40 +629,6 @@ class Shellcode:
                 found_routine_inds.append([sub_start, self.jump_split_by_index[ind+1]])
         return found_routine_inds
 
-    def jump_out_of_subroutine(self, instructions, start_ind, end_ind): #Is the jump going out of the subroutine
-        start_offset = Shellcode.index_to_offset(self.is_64, instructions, start_ind)#One to the sta
-        end_offset = Shellcode.index_to_offset(self.is_64, instructions, end_ind)#One to the start
-
-        jumps_out_of_subroutine = []
-
-        for jump_ind, jump_instr in enumerate(self.jumpIndexes):
-            if jump_ind>=start_ind and jump_ind<=end_ind:
-                if '-0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
-                    if(int(Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))-Shellcode.index_to_offset(self.is_64, instructions, start_ind)),16)<int(jump_instr.split(" ")[1], 16):
-                        jumps_out_of_subroutine.append(jump_ind)
-
-                elif '0x' in jump_instr: #Jumps are relative: If jump to offset+len - start>jump_negative
-                    if(int(Shellcode.index_to_offset(self.is_64, instructions, end_ind) - Shellcode.index_to_offset(self.is_64, instructions, jump_ind)+len(Shellcode.assemble64([jump_instr]) if self.is_64 else Shellcode.assemble([jump_instr]))),16)>int(jump_instr.split(" ")[1], 16):
-                        jumps_out_of_subroutine.append(jump_ind)
-        return jumps_out_of_subroutine
-
-    def jump_in_to_subroutine(self, instructions, start_ind, end_ind):
-        start_offset = Shellcode.index_to_offset(self.is_64, instructions, start_ind)#One to the sta
-        end_offset = Shellcode.index_to_offset(self.is_64, instructions, end_ind)#One to the start
-
-        jumps_in_to_subroutine = []
-
-        for jump_ind, jump_instr in enumerate(self.jumpIndexes):
-            if jump_ind<start_ind and jump_ind>end_ind:
-                if '-0x' in jump_instr: 
-                    jump_to = Shellcode.index_to_offset(jump_ind)+len(Shellcode.assemble64(jump_ind) if self.is_64 else Shellcode.assemble(jump_ind))-int(jump_instr.split(" ")[1][1:],16)
-                    if jump_to>=start_ind and jump_to<=end_ind:
-                        jumps_in_to_subroutine.append(jump_ind)
-                elif '0x' in jump_instr: 
-                    jump_to = Shellcode.index_to_offset(jump_ind)+len(Shellcode.assemble64(jump_ind) if self.is_64 else Shellcode.assemble(jump_ind))+int(jump_instr.split(" ")[1][1:],16)
-                    if jump_to>=start_ind and jump_to<=end_ind:
-                        jumps_in_to_subroutine.append(jump_ind)
-        return jumps_in_to_subroutine
 
 
 
@@ -885,88 +838,6 @@ class Shellcode:
         #print(f"Jump Count: {counter}") #Should be 5 call + 37 j
         return returnable
     
-    def findJumpTargets(self, code:bytes) -> list:
-        instructions = Shellcode.disassemble(code)
-        indexArray = []
-        targetIndexArray = []
-        for i in range(len(instructions)): #IDEA: for each jump instruction, 
-            for jumpInstruction in self.jumpInstructions: 
-                if((targetInstruction:=instructions[i].find(jumpInstruction))>-1):
-
-                    offset = int(instructions[i].split(" ")[1],16)-0x1000
-                    instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
-                    indexArray.append(targetInstruction)
-                    if self.is_64:
-                        landingInstruction = Shellcode.disassemble64(Shellcode.assemble64(instructions)[offset:])[0] 
-                    else:
-                        landingInstruction = Shellcode.disassemble(Shellcode.assemble(instructions)[offset:])[0] 
-                    addCounter = 0
-                    if self.is_64:
-                        postLanding = Shellcode.disassemble64(Shellcode.assemble64(instructions)[offset:])
-                    else:
-                        postLanding = Shellcode.disassemble(Shellcode.assemble(instructions)[offset:])
-                    instructionsCopy = instructions
-                    findMore = True
-                    while findMore:
-                        try:
-                            toAdd=instructionsCopy.index(landingInstruction)
-                            shouldReturn = True
-                            for i in range(len(instructions)-offset):
-                                if instructions[i+offset]!=postLanding[i]:
-                                    shouldReturn = False
-                            if shouldReturn==False:
-                                if instructionsCopy[toAdd:].index(landingInstruction)==0:
-                                    break
-                                continue
-                            else:
-                                addCounter += 1
-                                targetIndexArray.append(toAdd)
-                            if instructionsCopy[toAdd:].index(landingInstruction)==0:
-                                break
-                        except ValueError:
-                            findMore = False
-                    if AddCounter == 0:
-                        if self.is_64:
-                            landingInstruction = Shellcode.disassemble64(Shellcode.assemble64(instructions)[0:offset+1])[offset]
-                        else:
-                            landingInstruction = Shellcode.disassemble(Shellcode.assemble(instructions)[0:offset+1])[offset]
-        self.jumpTargets = targetIndexArray
-        return targetIndexArray
-    
-    #Add relative version 
-    def findJumpTargets(self, instructions:list) -> list: 
-        indexArray = []
-        targetIndexArray = []
-        jumpFounds = self.findJump(instructions)
-        for i in jumpFounds: #i here is an element, int, which is a valid element of instructions
-            offset = int(instructions[i].split(" ")[1],16)
-            instructions[i] = instructions[i].split(" ")[0]+" "+str(hex(offset))
-            if self.is_64:
-                landingInstruction = Shellcode.disassemble64(Shellcode.assemble64(instructions)[offset:])[0]
-                postLanding = Shellcode.disassemble64(Shellcode.assemble64(instructions)[offset:])
-            else:
-                landingInstruction = Shellcode.disassemble(Shellcode.assemble(instructions)[offset:])[0]
-                postLanding = Shellcode.disassemble(Shellcode.assemble(instructions)[offset:])
-            instructionsCopy = instructions
-            findMore = True
-            while findMore:
-                try:
-                    toAdd=instructionsCopy.index(landingInstruction)
-                    shouldReturn = True
-                    for i in range(len(instructions)-offset):
-                        if instructions[i+offset]!=postLanding[i]:
-                                shouldReturn = False #Watch for typo
-                    if shouldReturn==False:
-                        if instructionsCopy[toAdd:].index(landingInstruction)==0:
-                            break
-                        continue
-                    else:
-                        targetIndexArray.append(toAdd)
-                    if instructionsCopy[toAdd:].index(landingInstruction)==0:
-                        break
-                except ValueError:
-                    findMore = False
-        return targetIndexArray
     
     #@debughook_verbose
     #Note to self, next time there is a jump target error, checl here
@@ -1144,7 +1015,7 @@ class Shellcode:
             elif index<=self.jumpTargets[i] and index<=self.jumpIndexes[i]:
                 addedTypes.append("Below Both")
 
-    def update_subroutines(self, toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None) -> None:
+    def update_subroutines(self, toAdd:str, index:int, absolute:bool, shift_target = None, include_if_eq = None) -> None:
         if shift_target is None:
             shift_target = False
         if include_if_eq is None:
@@ -1161,7 +1032,7 @@ class Shellcode:
                 self.jump_split_by_offset[routine_point]+=added_bytes
 
     #@debughook_verbose
-    def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target:bool = None, include_if_eq = None, shift_jump = True) -> None:
+    def insertWithCare(self, instructions:list[str], toAdd:str, index:int, absolute:bool, shift_target = None, include_if_eq = None, shift_jump = True) -> None:
         if shift_target == None:
             shift_target = False
         if include_if_eq is None:
