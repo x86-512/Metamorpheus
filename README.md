@@ -12,6 +12,7 @@ Polymorpheus is designed to work in a R-E memory region, so you can place obfusc
 | Garbage Bytes | Adds random bytes to shift the disassembler's perceived instruction locations. |
 | Logic Replacement | Changes constants in the program for mov instructions. |
 | Long Sleep | Adds a long loop before the shellcode executes. |
+| Anti Debug | Checks the trap flag, if it is 1, it crashes the program. |
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
 
