@@ -42,6 +42,28 @@ def findBetweenEach(string:str, phrase:str) -> list:
         returnable = [string]
     return returnable
 
+def get_file(file_marker:int) -> str:
+    file_name=""
+    try:
+        sys.argv[file_marker+1]
+    except IndexError:
+        print("File not specified, using default shellcode.txt")
+        file_name = "shellcode.txt"
+        return file_name
+    if sys.argv[file_marker]=="--file" or sys.argv[file_marker]=="-f":
+        try:
+            file_name=sys.argv[file_marker+1]
+            with open(file_name) as f:
+                pass
+        except FileNotFoundError:
+            print("Invalid File")
+            exit()
+    else:
+        print("File not specified, using default shellcode.txt")
+        file_name = "shellcode.txt"
+    return file_name
+
+
 def ipv4_validate(ipv4:str) -> str:
     ip_str:str = ""
     try:
@@ -98,7 +120,6 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
         with open(fileName, 'r') as ShellcodeFile:
             for line in ShellcodeFile.readlines():#[codeBeginsLine:]:
                 actual_code += findBetweenEach(line, '"')[0].replace('"', "")
-                #print(actual_code)
             arch = int(actual_code.split("\n")[0])
             if(arch==64):
                 is64 = True
@@ -110,24 +131,29 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
         exit()
     return Shellcode(actual_code, is64)
     
-def verify_args():
-    valid_flags:list[str] = ['d', 'r', 'g', 'v', 'l', 'a']
-    return False if sys.argv[1][0] != '-' else all(flag in valid_flags for flag in sys.argv[1][1:])
+def verify_flags(argv_start):
+    valid_flags:list[str] = ['d', 'r', 'g', 'l', 'a']
+    return False if sys.argv[argv_start][0] != '-' else all(flag in valid_flags for flag in sys.argv[argv_start][1:])
 
 def main() -> None:
-    #print("\n")
-    #print(code.jumpAddition)
     args_present = True
     try:
         sys.argv[1]
     except IndexError:
         args_present = False
+
+    if not args_present:
+        print_help()
+        exit()
     
     verbose:bool = False
     if 'v' in sys.argv[-1]:
         verbose = True
 
-    code:Shellcode = loadShellcodeFromFile("shellcode.txt")
+    argv_start:int = 1
+
+    shellcode_file = get_file(argv_start+1)
+    code:Shellcode = loadShellcodeFromFile(shellcode_file)
     #print(f"Code: {code.getCode()}")
     if code.is_64_bit():
         instructions = Shellcode.disassemble64(code.getCode())
@@ -137,7 +163,8 @@ def main() -> None:
     #print(instructions)
     #print(f"Code: {code.getCode()}")
     if args_present:
-        if(not verify_args()):
+        if(not verify_flags(argv_start)):
+            print("Invalid Arguments")
             print_help()
             return
 
