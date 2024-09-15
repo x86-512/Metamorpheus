@@ -1,7 +1,7 @@
 # Polymorpheus
 __This project is undergoing rewrite to reduce overcomplexity and to simplify the process of adding new features__
 
-Polymorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing basic dynamic detection. If you are having a disassembly error, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
+Polymorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing some basic dynamic detection mechanisms. 
 
 Polymorpheus is designed to work in a W^E memory region (you can either write or execute, but not both), so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
@@ -20,6 +20,11 @@ Polymorpheus is designed to work in a W^E memory region (you can either write or
 | Useless Instructions | Adds useless instructions that have no impact on how the shellcode is run. |
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
+
+# Issues
+- If you are having a disassembly error, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
+- This project has been tested on a limited set of shellcodes. Do not expect everything to work.
+- Meterpreter shellcode does not work due to disassembly issues beyond my control.
 
 # Dependencies
 - Python: At least 3.10
