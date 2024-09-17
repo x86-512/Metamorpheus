@@ -118,7 +118,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     is64 = False
     try:
         with open(fileName, 'r') as ShellcodeFile:
-            for line in ShellcodeFile.readlines():#[codeBeginsLine:]:
+            for line in ShellcodeFile.readlines():
                 actual_code += findBetweenEach(line, '"')[0].replace('"', "")
             arch = int(actual_code.split("\n")[0])
             if(arch==64):
