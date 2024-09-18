@@ -111,7 +111,6 @@ def set_host_conn(shellcode:str) -> str:
 #Remember to come here if you get an assembly error
 def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     #Line 1 is marked by arch: either 32 or 64
-    #actual_code = b""
     actual_code = ""
     codeBeginsLine = 1
     arch:int = 32
