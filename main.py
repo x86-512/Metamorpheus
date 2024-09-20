@@ -111,13 +111,14 @@ def set_host_conn(shellcode:str) -> str:
 #Remember to come here if you get an assembly error
 def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     #Line 1 is marked by arch: either 32 or 64
+    #actual_code = b""
     actual_code = ""
     codeBeginsLine = 1
     arch:int = 32
     is64 = False
     try:
         with open(fileName, 'r') as ShellcodeFile:
-            for line in ShellcodeFile.readlines():
+            for line in ShellcodeFile.readlines():#[codeBeginsLine:]:
                 actual_code += findBetweenEach(line, '"')[0].replace('"', "")
             arch = int(actual_code.split("\n")[0])
             if(arch==64):
@@ -214,7 +215,7 @@ def main() -> None:
 
             #print(updatedInstr)
             #print(code.registers_in_subroutine(updatedInstr))
-            full_subroutines = code.registers_in_subroutine(updatedInstr)
+#           full_subroutines = code.registers_in_subroutine(updatedInstr)
         #    if len(code.registers_in_subroutine(updatedInstr))==0:
         #        print("Your shellcode does not use the a, b, c, and d registers in the same subroutine")
         #        exit()
@@ -259,6 +260,9 @@ def main() -> None:
         if verbose:
             print(f"\nUpdated Instructions:\n{updatedInstr}\n")
         print(f"New Shellcode:\n{code.string}")
+        if contains_bad_chars(code.string):
+            print("\nWarning: Shellcode contains bad characters")
+            code.print_badchar_info()
         print(f"\nShellcode Length: {code.length} bytes")
     else:
         print_help()

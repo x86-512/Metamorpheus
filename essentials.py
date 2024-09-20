@@ -169,6 +169,7 @@ def find_first_register_uses(instructions:list[str], registers:list[str], startI
 #If there is an issue with xor byte ptr...
 
 def get_register_size(instruction:str) -> int:
+#    if(instruction.split(',')[0]=="xor byte"):
     #Get the words of the function first:
     for i in instruction.split(" "):
         match i.lower():
@@ -579,7 +580,7 @@ class Shellcode:
 
         #These will be used after the rewrite
         self.arch = (CS_ARCH_X86, KS_ARCH_X86)
-        self.mode = None
+        self.mode = (CS_MODE_32, KS_MODE_32) #Default value
         if self.arch[0]==CS_ARCH_X86:
             self.mode = (CS_MODE_64, KS_MODE_64) if self.is_64 else (CS_MODE_32, KS_MODE_32)
     
@@ -597,6 +598,25 @@ class Shellcode:
     @property
     def string(self):
         return bytesToString(self.shellcode)
+
+    #def bad_chars(self): #use a dictionary
+        #Check the whole shellcode for bad characters and return the bad chacters and their indexes
+        #pass
+
+    def get_badchar_info(self):
+        self.info = {}
+        for ind, byte in enumerate(self.string.split('x')):
+            for bad in badChars:
+                if bad in byte:
+                    self.info[ind] = byte.replace('\\', '')
+
+    def print_badchar_info(self):
+        self.get_badchar_info()
+        if self.info == {}:
+            return
+        for i in self.info:
+            print(f"Bad character \\x{self.info[i]} found at byte {hex(i)} (Dec {i})")
+        
 
     def get_subroutines(self, instructions:list):
         assembly_offset:int = 0
