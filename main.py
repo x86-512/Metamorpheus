@@ -160,8 +160,6 @@ def main() -> None:
     else:
         instructions = Shellcode.disassemble(code.getCode()) 
 
-    #print(instructions)
-    #print(f"Code: {code.getCode()}")
     if args_present:
         if(not verify_flags(argv_start)):
             print("Invalid Arguments")
