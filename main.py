@@ -185,8 +185,6 @@ def main() -> None:
         code.findJumpTargetsRelative(instructions)
         updatedInstr = instructions 
 
-        #print(len(code.jumpIndexes))
-        #print(len(code.jumpTargets))
         code.get_subroutines(updatedInstr)
 
         if "l" in sys.argv[1]:
