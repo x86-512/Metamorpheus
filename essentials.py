@@ -220,7 +220,6 @@ def get_register_size(instruction:str) -> int:
             else:
                 return 0
         return 0
-#print(get_register_size("mov word ptr [esp + 0x3c], 0x101"))
 
 def registerClassMain(base:str) -> list:
     returnable = []
