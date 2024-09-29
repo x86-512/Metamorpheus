@@ -341,9 +341,6 @@ def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
             continue
         product = beautify_hex(hex(int(original[2:], 16)-int(hex1[2:], 16)), arch)
 
-       # print(hex1)
-       # print(product)
-
         if (int(hex1,16)+int(product, 16)>=int("0x"+"f"*int(arch/4), 16)):
             print("Add branch 2")
             continue
