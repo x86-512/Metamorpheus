@@ -169,7 +169,6 @@ def find_first_register_uses(instructions:list[str], registers:list[str], startI
 #If there is an issue with xor byte ptr...
 
 def get_register_size(instruction:str) -> int:
-#    if(instruction.split(',')[0]=="xor byte"):
     #Get the words of the function first:
     for i in instruction.split(" "):
         match i.lower():
