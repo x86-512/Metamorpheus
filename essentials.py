@@ -169,6 +169,7 @@ def find_first_register_uses(instructions:list[str], registers:list[str], startI
 #If there is an issue with xor byte ptr...
 
 def get_register_size(instruction:str) -> int:
+#    if(instruction.split(',')[0]=="xor byte"):
     #Get the words of the function first:
     for i in instruction.split(" "):
         match i.lower():
@@ -219,6 +220,7 @@ def get_register_size(instruction:str) -> int:
             else:
                 return 0
         return 0
+#print(get_register_size("mov word ptr [esp + 0x3c], 0x101"))
 
 def registerClassMain(base:str) -> list:
     returnable = []
@@ -339,6 +341,9 @@ def random_hex_add_pair(original:str, arch:int) -> list: #reverse it too
             print("Add branch 1")
             continue
         product = beautify_hex(hex(int(original[2:], 16)-int(hex1[2:], 16)), arch)
+
+       # print(hex1)
+       # print(product)
 
         if (int(hex1,16)+int(product, 16)>=int("0x"+"f"*int(arch/4), 16)):
             print("Add branch 2")

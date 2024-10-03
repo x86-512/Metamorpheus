@@ -121,6 +121,47 @@ def logic_replacement(self, instructions:list) -> list:
                     instructions[i]=f"xor {instruction.split(' ')[2]}, {instruction.split(' ')[2]}"
         except IndexError:
             pass
+
+        insplit = instruction.split(' ')
+        #Test
+        if "push" in insplit[0].lower() and "0x" in insplit[1].lower() and len(insplit[1])==10:
+            replacements = random_hex_xor_pair(insplit[1], 32)
+            instructions[i] = insplit[0]+f" {replacements[0]}"
+            stack_pointer = "rsp" if self.is_64 else "esp"
+            self.insertWithCare(instructions, f"xor dword ptr [{stack_pointer}], {replacements[1]}", i+1, False)
+            add_to_int_list(no_more_updates, len(no_more_updates), i)
+            add_to_int_list(no_more_updates, len(no_more_updates), i+1)
+
+            add_to_int_list(do_not_change, len(do_not_change), i)
+            add_to_int_list(do_not_change, len(do_not_change), i+1)
+            # if "cmp" in insplit[0].lower() and "0x" in insplit[-1] and len(insplit[-1])==10:
+            #operand_size = 64 if self.is_64 else 32
+            #operand = instruction[instruction.find(' '):instruction.find(',')]
+            #if 'byte' in operand or (len(operand)==2 and ('l' in operand or 'h' in operand)): 
+            #    operand_size=8
+            #elif 'word' in operand or (len(operand)==2 and 'x' in operand): 
+            #    operand_size=16
+            #elif 'dword' in operand or (len(operand)==3 and 'e' in operand[0]): 
+            #    operand_size=32
+            #elif 'qword' in operand or (len(operand)==3 and 'r' in operand[0]): 
+            #    operand_size=64
+            #cmp_pair = random_hex_xor_pair(insplit[-1], operand_size) #get the operand_size
+            #instructions[i]=instruction[:instruction.find(',')]+f", {cmp_pair[0]}"
+            #self.insertWithCare(instructions, f"xor {operand}, {cmp_pair[1]}", i+2, False)
+            #self.insertWithCare(instructions, f"xor {operand}, {cmp_pair[1]}", i, False, True)
+
+            #add_to_int_list(no_more_updates, len(no_more_updates), i)
+            #add_to_int_list(no_more_updates, len(no_more_updates), i+1)
+            #add_to_int_list(no_more_updates, len(no_more_updates), i+2)
+
+            #add_to_int_list(do_not_change, len(do_not_change), i)
+            #add_to_int_list(do_not_change, len(do_not_change), i+1)
+            #add_to_int_list(do_not_change, len(do_not_change), i+2)
+            #.find(space) to find(,)
+            #Generate a random xor pair, add xor before the cmp(if cmp is a jump target, the jump target will stay the same)
+            #Add xor after and before the jump
+
+
         for j in mathInstructions:
             mnemonic = j.split(" ")[0]
             instruction_size = get_register_size(instruction) #Breaks for nops
