@@ -1,9 +1,8 @@
-# Polymorpheus
-__This project is undergoing rewrite to reduce overcomplexity and to simplify the process of adding new features__
+# Metamorpheus
 
-Polymorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing some basic dynamic detection mechanisms. 
+Metamorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed to evade signature-based antivirus solutions and payload-based IPS Systems. Shellcode generated with this script is also capable of bypassing some basic dynamic detection mechanisms. 
 
-Polymorpheus is designed to work in W^X memory regions (you can either write or execute, but not both), so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
+Metamorpheus is designed to work in W^X memory regions (you can either write or execute, but not both), so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
 # How to run
 1. Install Dependencies
