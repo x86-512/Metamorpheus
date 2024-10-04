@@ -17,8 +17,8 @@ from random import randint #Temporary
 def print_help():
     print("Polymorpheus\n")
     print("Syntax:")
-    #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
-    #print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)")
+    #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)") #Will be removed
+    #print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)") #Will be enabled under experimental features
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
@@ -154,7 +154,6 @@ def main() -> None:
 
     shellcode_file = get_file(argv_start+1)
     code:Shellcode = loadShellcodeFromFile(shellcode_file)
-    #print(f"Code: {code.getCode()}")
     if code.is_64_bit():
         instructions = Shellcode.disassemble64(code.getCode())
     else:
@@ -191,8 +190,6 @@ def main() -> None:
             updatedInstr = code.long_sleep(updatedInstr)
         if "d" in sys.argv[1]:
             updatedInstr = code.addDeadCode(updatedInstr)
-        #print(updatedInstr)
-        #print("\n"*10)
         if "r" in sys.argv[1]:
             updatedInstr = code.logic_replacement(updatedInstr)
         #if "x" not in sys.argv[1] and "s" in sys.argv[1]:
@@ -233,8 +230,6 @@ def main() -> None:
         if 'a' in sys.argv[1]:
             updatedInstr = code.anti_trap(updatedInstr)
         if 'g' in sys.argv[1]:
-            #print(len(code.jumpIndexes))
-            #print(len(code.jumpTargets))
             code.insert_garbage(updatedInstr)
         else:
             if code.is_64_bit():
