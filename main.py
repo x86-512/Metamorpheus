@@ -174,7 +174,6 @@ def main() -> None:
         instructions = Shellcode.fixBadMnemonics(instructions)
         instructions = code.fixJumpErrors(instructions, code.getCode())  #Remember positive loops
 
-        #Add a verbose option
         if verbose:
             print(f"\nOriginal Instructions: \n{instructions}")
 
