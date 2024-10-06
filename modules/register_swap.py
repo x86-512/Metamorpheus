@@ -608,8 +608,6 @@ def registerSwapSubroutine(self, instructions:list, start_ind_list = 0, end_ind_
     fullRegisterList = []
     for i in registerClasses:
         fullRegisterList.append(registerClassMain(i))
-    #print(fullRegisterList)
-    #breakpoint()
     registerMap = mapRegisters(registerClasses)
 
     if self.is_64:
