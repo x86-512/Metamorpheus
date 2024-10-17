@@ -17,8 +17,8 @@ from random import randint #Temporary
 def print_help():
     print("Polymorpheus\n")
     print("Syntax:")
-    #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)") #Will be removed
-    #print("-x: Full Register Swap (\x1b[4mLimited to 63 byte, may cause crashes\x1b[0m)") #Will be enabled under experimental features
+    #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
+    print("-x: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
     print("-r: Logic replacement")
     print("-d: Dead code insertion")
     print("-g: Garbage byte insertion")
@@ -47,7 +47,7 @@ def get_file(file_marker:int) -> str:
     try:
         sys.argv[file_marker+1]
     except IndexError:
-        print("File not specified, using default shellcode.txt")
+        print("[-] Shellcode file not specified, using default shellcode.txt")
         file_name = "shellcode.txt"
         return file_name
     if sys.argv[file_marker]=="--file" or sys.argv[file_marker]=="-f":
@@ -56,10 +56,10 @@ def get_file(file_marker:int) -> str:
             with open(file_name) as f:
                 pass
         except FileNotFoundError:
-            print("Invalid File")
+            print("Invalid Shellcode File")
             exit()
     else:
-        print("File not specified, using default shellcode.txt")
+        print("[-] Shellcode file not specified, using default shellcode.txt")
         file_name = "shellcode.txt"
     return file_name
 
@@ -111,8 +111,7 @@ def set_host_conn(shellcode:str) -> str:
 #Remember to come here if you get an assembly error
 def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     #Line 1 is marked by arch: either 32 or 64
-    #actual_code = b""
-    actual_code = ""
+    actual_code = "" #Could be bytes
     codeBeginsLine = 1
     arch:int = 32
     is64 = False
@@ -132,7 +131,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     return Shellcode(actual_code, is64)
     
 def verify_flags(argv_start):
-    valid_flags:list[str] = ['d', 'r', 'g', 'l', 'a']
+    valid_flags:list[str] = ['d', 'r', 'g', 'l', 'a', 'x']
     return False if sys.argv[argv_start][0] != '-' else all(flag in valid_flags for flag in sys.argv[argv_start][1:])
 
 def main() -> None:
@@ -154,6 +153,7 @@ def main() -> None:
 
     shellcode_file = get_file(argv_start+1)
     code:Shellcode = loadShellcodeFromFile(shellcode_file)
+
     if code.is_64_bit():
         instructions = Shellcode.disassemble64(code.getCode())
     else:
@@ -174,6 +174,7 @@ def main() -> None:
         instructions = Shellcode.fixBadMnemonics(instructions)
         instructions = code.fixJumpErrors(instructions, code.getCode())  #Remember positive loops
 
+        #Add a verbose option
         if verbose:
             print(f"\nOriginal Instructions: \n{instructions}")
 
@@ -191,40 +192,9 @@ def main() -> None:
             updatedInstr = code.addDeadCode(updatedInstr)
         if "r" in sys.argv[1]:
             updatedInstr = code.logic_replacement(updatedInstr)
-        #if "x" not in sys.argv[1] and "s" in sys.argv[1]:
-            #Make sure it is not in a loop, also randomize swapping indexes
-            #start_of_swap = max(find_first_register_uses(updatedInstr, ["rax", "rcx", "rdx", "rbx"]))
-
-            #not inserting xchg instructions
-
-            #for instruction in code.jumpIndexes:
-            #    print(instructions[instruction])
-            #breakpoint()
-
-            #print(code.jump_split_by_index)
-            #reg_swap_locs = code.update_bounds_of_reg_swap(updatedInstr, start_of_swap)
-
-            #print(updatedInstr)
-            #print(code.registers_in_subroutine(updatedInstr))
-#           full_subroutines = code.registers_in_subroutine(updatedInstr)
-        #    if len(code.registers_in_subroutine(updatedInstr))==0:
-        #        print("Your shellcode does not use the a, b, c, and d registers in the same subroutine")
-        #        exit()
-        #    reg_swap_conditional_subroutines = full_subroutines[0] 
-            #print(reg_swap_conditional_subroutines)
-        #    reg_swap_locs = reg_swap_conditional_subroutines[0] if len(reg_swap_conditional_subroutines)>0 else -1
-        #    if reg_swap_locs==-1:
-        #        print("Register swap not completed due to the required contitions not being met")
-        #        exit()
-            #print(reg_swap_locs)
-        #    else:
-        #        updatedInstr = code.registerSwapSubroutine(updatedInstr, reg_swap_conditional_subroutines[0], reg_swap_conditional_subroutines[1]-1)
-
-        #if "x" in sys.argv[1]:
-        #    if code.length>63:
-        #        print("Your shellcode is too large to use the global register swap feature. Your shellcode should be no longer than 63 bytes.")
-        #        exit()
-        #    updatedInstr = code.registerSwap(updatedInstr)
+        if "x" in sys.argv[1]:
+            print("[\x1b[93m!\x1b[0m] \x1b[93mWARNING: You are using an experimental feature. Your shellcode may not work as intended\x1b[0m")
+            updatedInstr = code.registerSwap(updatedInstr)
 
         if 'a' in sys.argv[1]:
             updatedInstr = code.anti_trap(updatedInstr)
@@ -238,21 +208,18 @@ def main() -> None:
 
         if len(sys.argv)>=3:
             if 'w' in sys.argv[2]:
-                print("Windows functionality will be added soon")
-                pass
+                print("Windows Compiler functionality will be added soon")
             if 'u' in sys.argv[2]:
                 unicomp.compile(64 if code.is_64 else 32,code.string)
-
-        #updatedInstr = code.encrypt(updatedInstr)
 
         #Verbose option here
         if verbose:
             print(f"\nUpdated Instructions:\n{updatedInstr}\n")
-        print(f"New Shellcode:\n{code.string}")
+        print(f"\nNew Shellcode:\n{code.string}")
         if contains_bad_chars(code.string):
-            print("\nWarning: Shellcode contains bad characters")
+            print("\n[\x1b[93m!\x1b[0m] \x1b[93mWarning: Shellcode contains bad characters\x1b[0m")
             code.print_badchar_info()
-        print(f"\nShellcode Length: {code.length} bytes")
+        print(f"\nShellcode Length: {code.length} | {hex(code.length)} bytes")
     else:
         print_help()
 
