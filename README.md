@@ -7,7 +7,7 @@ Metamorpheus is designed to work in W^X memory regions (you can either write or 
 # How to run
 1. Install Dependencies
 2. Make a file, with the instruction size (32 or 64) on the first line and the shellcode on the second line. Newlines and " will be ignored.
-3. Run main.py by its correct syntax, `python3 main.py -(arguments) --file (file_name_here)`
+3. Run main.py by its correct syntax, `python3 main.py -(arguments) --file (file_name_here) IP=(server_ip) PORT=(server_port)`
 
 # Features
 | Feature | Description |
