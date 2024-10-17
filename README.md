@@ -4,9 +4,11 @@ Metamorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed 
 
 Metamorpheus is designed to work in W^X memory regions (you can either write or execute, but not both), so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
+This script can also be used to set the C2 ip and port.
+
 # How to run
 1. Install Dependencies
-2. Make a file, with the instruction size (32 or 64) on the first line and the shellcode on the second line. Newlines and " will be ignored.
+2. Make a file, with the instruction size (32 or 64) on the first line and the shellcode on the second line. Newlines and " will be ignored. Specify any areas in your shellcode where you need an ip address or port with IP/PORT.
 3. Run main.py by its correct syntax, `python3 main.py -(arguments) --file (file_name_here) IP=(server_ip) PORT=(server_port)`
 
 # Features
