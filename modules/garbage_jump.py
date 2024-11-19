@@ -24,7 +24,7 @@ def insert_garbage(self, instructions) -> int:
     shellcode_byte_locations = []
     if len(instructions)<5:
         return 0
-    jump_target:int = randint(1,int((len(instructions)//2-1)))
+    jump_target:int = randint(1,int((len(instructions)//2-1))) #if longer, then do it at the start of the code
     jump_index:int = jump_target - 1
     num_bytes:int = randint(2,26)
 
