@@ -1,6 +1,8 @@
 import random
 from essentials import *
 
+
+#Add dead_sled for a long list of dead code that is outside of any subroutine
 useless_instructions = ["nop", "and _, 0x|"]#, "xchg _, _"]
 #_ is register, | is F*registersize
 #= is random number with no bad chars
