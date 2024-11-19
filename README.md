@@ -11,6 +11,12 @@ This script can also be used to set the C2 ip and port.
 2. Make a file, with the instruction size (32 or 64) on the first line and the shellcode on the second line. Newlines and " will be ignored. Specify any areas in your shellcode where you need an ip address or port with IP/PORT.
 3. Run main.py by its correct syntax, `python3 main.py -<arguments> --file <shellcode_file_name_here> IP=<server_ip> PORT=<server_port>`
 
+Shellcode file format:
+```
+Line 1: <arch: x64 or x32/x86> 
+Line 2+: <shellcode here, \x format>
+```
+
 # Features
 | Feature | Description |
 | --- | --- |
