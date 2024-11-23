@@ -15,7 +15,7 @@ import sys
 from random import randint #Temporary
 
 def print_help():
-    print("Polymorpheus\n")
+    print("Metamorpheus\n")
     print("Syntax:")
     #print("-s: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
     print("-x: Register Swap (\x1b[4mEXPERIMENTAL\x1b[0m)")
@@ -24,12 +24,13 @@ def print_help():
     print("-g: Garbage byte insertion")
     print("-l: Long sleep")
     print("-a: Anti debugging features")
-    print("-v: Verbose mode, must be last argument")
+    print("-v: Verbose mode, must be last argument\n")
 
     print("--long_garbage: Makes the garbage byte insertion longer")
+    print("--file=<filename>: Specify the shellcode file")
     print("\nTo specify an IPv4 address to connect to, include IP= as a command-line argument, and use IP as your ip address placeholder in shellcode.txt")
     print("To specify a port to connect to, include PORT=, use PORT as your port placeholder in shellcode.txt\n")
-    print("Example: python3 main.py -rdgl IP=127.0.0.1 PORT=4444 -v\n")
+    print("Example: python3 main.py -rdgl IP=127.0.0.1 PORT=4444 --file=shellcode.txt -v\n")
     print("Shellcode.txt syntax:\nLine 1: Arch(32 or 64)\nLine 2: Shellcode here, with or without \" or newlines")
     print("\nThis script only works on 32-bit or 64-bit intel architectures at the moment")
 
@@ -46,23 +47,29 @@ def findBetweenEach(string:str, phrase:str) -> list:
 
 def get_file(file_marker:int) -> str:
     file_name=""
-    try:
-        sys.argv[file_marker+1]
-    except IndexError:
+    #try:
+    if not any("--file=" in arg for arg in sys.argv):
+        #except IndexError:
         print("[-] Shellcode file not specified, using default shellcode.txt")
         file_name = "shellcode.txt"
         return file_name
-    if sys.argv[file_marker]=="--file" or sys.argv[file_marker]=="-f":
-        try:
-            file_name=sys.argv[file_marker+1]
-            with open(file_name) as f:
-                pass
-        except FileNotFoundError:
-            print("Invalid Shellcode File")
-            exit()
-    else:
-        print("[-] Shellcode file not specified, using default shellcode.txt")
-        file_name = "shellcode.txt"
+    file_marker= next(i for i, arg in enumerate(sys.argv) if "--file=" in arg)
+    #if sys.argv[file_marker]=="--file":# or sys.argv[file_marker]=="-f":
+    try:
+        file_name=sys.argv[file_marker].split('=')[1]
+        with open(file_name) as f:#Verify we can open it
+            #Test to make sure we can access
+            line_1=f.readline().strip("\n")
+            if not "32"==line_1 and not "64"==line_1:
+                print("[!] Invalid shellcode file format. Your first line should have the correct architecture")
+                exit()
+            pass
+    except FileNotFoundError:
+        print("Invalid Shellcode File")
+        exit()
+    #else:
+    #    print("[-] Shellcode file not specified, using default shellcode.txt")
+    #    file_name = "shellcode.txt"
     return file_name
 
 
@@ -154,6 +161,7 @@ def main() -> None:
     argv_start:int = 1
 
     shellcode_file = get_file(argv_start+1)
+    print(shellcode_file)
     code:Shellcode = loadShellcodeFromFile(shellcode_file)
 
     if code.is_64_bit():
@@ -167,7 +175,9 @@ def main() -> None:
             print_help()
             return
 
-        code:Shellcode = loadShellcodeFromFile("shellcode.txt")
+        if not any("--file=" in arg for arg in sys.argv):
+            code:Shellcode = loadShellcodeFromFile("shellcode.txt")
+
         if code.is_64_bit():
             instructions = Shellcode.disassemble64(code.getCode())
         else:
