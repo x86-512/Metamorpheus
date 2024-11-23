@@ -15,7 +15,7 @@ Metamorpheus is designed to work in W^X memory regions (you can either write or 
 
 Shellcode file format:
 ```
-Line 1: <arch: x64 or x32/x86> 
+Line 1: <arch: 64 or 32> 
 Line 2+: <shellcode here, \x format>
 ```
 
