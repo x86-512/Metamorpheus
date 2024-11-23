@@ -30,6 +30,10 @@ Line 2+: <shellcode here, \x format>
 
 These features often involve adding instructions to existing shellcode. Therefore, all subroutine-related instructions are updated correctly with regards to what was added. This will take in to account whether a call is inside or outside of the shellcode and what is between the jump and its target.
 
+# Examples:
+Metasploit windows/shell/reverse_tcp with garbage byte insertion:
+![Metasploit Reverse TCP Windows x86 Shellcode](examples/msf_windows_reverse_tcp.png)
+
 # Issues
 - If you are having a disassembly error, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
 - This project has been tested on a limited set of shellcodes. Do not expect everything to work.
