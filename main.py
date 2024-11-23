@@ -161,7 +161,6 @@ def main() -> None:
     argv_start:int = 1
 
     shellcode_file = get_file(argv_start+1)
-    print(shellcode_file)
     code:Shellcode = loadShellcodeFromFile(shellcode_file)
 
     if code.is_64_bit():
