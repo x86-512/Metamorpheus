@@ -36,8 +36,7 @@ Metasploit windows/shell/reverse_tcp with garbage byte insertion:
 
 # Issues
 - If you are having a disassembly error, please check for any instructions labeled `(bad)` in https://defuse.ca/online-x86-assembler.htm.
-- This project has been tested on a limited set of shellcodes. Do not expect everything to work.
-- Meterpreter shellcode does not work due to disassembly issues related to Keystone.
+- Meterpreter shellcode does not work due to disassembly issues related to Keystone and Capstone.
 
 # Dependencies
 - Python: At least 3.10
