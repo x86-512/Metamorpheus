@@ -4,6 +4,8 @@ Metamorpheus is a polymorphic/metamorphic shellcode obfuscator that is designed 
 
 This script is able to generate up to $10^{149}$ different combinations of shellcode, which is more than the number of atoms in the observable universe($10^{80}$).
 
+Other features in this script allow you to evade debuggers, disassemblers, and some sandboxes.
+
 Metamorpheus is designed to work in W^X memory regions (you can either write or execute, but not both), so you can place obfuscated code into the .text section of a PE file. It also works on shellcode for exploits.
 
 This script can also be used to set the C2 ip and port.
