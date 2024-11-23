@@ -18,15 +18,26 @@ def generate_random_bytes(num_bytes:int) -> bytes:
                 break
     return returnable
 
+def insert_garbage_long(self, instructions):
+    upper_bound_possibles = []
+    if self.jumpIndexes==[]:
+        upper_bound_possibles.append(len(instructions))
+    else:
+        upper_bound_possibles.append( min(self.jumpIndexes))
+        upper_bound_possibles.append(min(self.jumpTargets))#Target could be less than the first jump
+    upper_bound = min(upper_bound_possibles)
+    return self.insert_garbage(instructions, randint(0,upper_bound), randint(128,250))
+
 #@adding_bad_bytes
-def insert_garbage(self, instructions) -> int:
+def insert_garbage(self, instructions, jump_target=None, num_bytes=randint(2,26)) -> int:
     #print(f"Jump Indexes Before: {self.jumpIndexes}")
     shellcode_byte_locations = []
     if len(instructions)<5:
         return 0
-    jump_target:int = randint(1,int((len(instructions)//2-1))) #if longer, then do it at the start of the code AND OUTSIDE OF ANY JUMPS
+    if jump_target is None:
+        jump_target:int = randint(1,int((len(instructions)//2-1)))
     jump_index:int = jump_target - 1
-    num_bytes:int = randint(2,26)
+    #num_bytes:int = randint(2,26)
 
     self.add_jump(instructions, jump_index, jump_target) #Get the index by assemble to the end
     garb_bytes:bytes = generate_random_bytes(num_bytes)
@@ -47,3 +58,4 @@ def insert_garbage(self, instructions) -> int:
     return num_bytes
 
 Shellcode.insert_garbage = insert_garbage
+Shellcode.insert_garbage_long = insert_garbage_long
