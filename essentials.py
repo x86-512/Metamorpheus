@@ -1,4 +1,3 @@
-
 from capstone import *
 from keystone import *
 import random
@@ -54,7 +53,6 @@ def print_x(msg, **inserting) -> None:
     if len(inserting)!=to_change_count:
         return
     print(inserting.items())
-    #msg = msg.format(for i, in enumerate(inserting))
     print(msg)
 
 def debughook_verbose(func):
