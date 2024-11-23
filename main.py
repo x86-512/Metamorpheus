@@ -25,6 +25,8 @@ def print_help():
     print("-l: Long sleep")
     print("-a: Anti debugging features")
     print("-v: Verbose mode, must be last argument")
+
+    print("--long_garbage: Makes the garbage byte insertion longer")
     print("\nTo specify an IPv4 address to connect to, include IP= as a command-line argument, and use IP as your ip address placeholder in shellcode.txt")
     print("To specify a port to connect to, include PORT=, use PORT as your port placeholder in shellcode.txt\n")
     print("Example: python3 main.py -rdgl IP=127.0.0.1 PORT=4444 -v\n")
@@ -131,7 +133,7 @@ def loadShellcodeFromFile(fileName:str) -> Shellcode: #meterpreter is too large
     return Shellcode(actual_code, is64)
     
 def verify_flags(argv_start):
-    valid_flags:list[str] = ['d', 'r', 'g', 'l', 'a', 'x']
+    valid_flags:list[str] = ['d', 'r', 'g', 'l', 'a', 'x']#, "--long_garbage"]
     return False if sys.argv[argv_start][0] != '-' else all(flag in valid_flags for flag in sys.argv[argv_start][1:])
 
 def main() -> None:
@@ -199,7 +201,10 @@ def main() -> None:
         if 'a' in sys.argv[1]:
             updatedInstr = code.anti_trap(updatedInstr)
         if 'g' in sys.argv[1]:
-            code.insert_garbage(updatedInstr)
+            if "--long_garbage" in sys.argv:
+                code.insert_garbage_long(updatedInstr)
+            else:
+                code.insert_garbage(updatedInstr)
         else:
             if code.is_64_bit():
                 code.shellcode = Shellcode.assemble64(updatedInstr)
