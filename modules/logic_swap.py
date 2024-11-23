@@ -196,11 +196,9 @@ def logic_replacement(self, instructions:list) -> list:
                         #print(k)
                         #print(after_instr)
                         for sub in registerClassMain(register):
-                            #print(sub)
                             if sub in after_instr:
                                 max_reg_possibles.append(k)
                         for crit in critical_instrs:
-                            #print(crit)
                             if crit in after_instr:
                                 max_reg_possibles.append(k)
                         #if 'push' in after_instr.lower() or 'pop' in after_instr.lower():
