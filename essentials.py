@@ -133,7 +133,6 @@ def add_to_int_list(lst:list[int], new_ind:int, new_item:int):
     lst.insert(new_ind, new_item)
 
 #Returns an index of the first use
-#@debughook
 def find_first_register_use(instructions:list, register:str, startIndex = None) -> int:
     if startIndex==None:
         startIndex = 0
